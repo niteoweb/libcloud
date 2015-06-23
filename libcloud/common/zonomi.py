@@ -8,7 +8,7 @@ __all__ = [
 
 
 #Endpoint for Zonomi API.
-API_HOST = 'https://zonomi.com/app/dns/dyndns.jsp?'
+API_HOST = 'https://zonomi.com/app'
 
 class ZonomiResponse(XmlResponse):
     pass
