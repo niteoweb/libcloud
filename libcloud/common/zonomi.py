@@ -1,6 +1,12 @@
 from libcloud.common.base import XmlResponse
 from libcloud.common.base import ConnectionKey
 
+__all__ = [
+        'ZonomiResponse',
+        'ZonomiConnection'
+    ]
+
+
 #Endpoint for Zonomi API.
 API_HOST = 'https://zonomi.com/app/dns/dyndns.jsp?'
 
