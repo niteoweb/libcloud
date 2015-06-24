@@ -1,5 +1,5 @@
 from libcloud.common.base import JsonResponse
-from libcloud.common.base import ConnectionKey
+from libcloud.common.base import ConnectionUserAndKey
 
 #Endpoint for liquidweb api.
 API_HOST = 'https://api.stormondemand.com'
@@ -26,7 +26,7 @@ class LiquidWebResponse(JsonResponse):
         return js
 
 
-class LiquidWebConnection(ConnectionKey):
+class LiquidWebConnection(ConnectionUserAndKey):
     host = API_HOST
     responseCls = LiquidWebResponse
 
