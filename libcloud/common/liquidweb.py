@@ -57,8 +57,8 @@ class LiquidWebResponse(JsonResponse):
             self.body = b(self.body).decode('utf-8')
 
         self.objects, self.errors = self.parse_body()
-        if not (self.success() and self.errors[0]['ERRORMESSAGE']
-                    != 'LW::Exception::RecordNotFound'):
+        #ipdb.set_trace()
+        if not self.success() and self.errors[0]['ERRORMESSAGE'] != 'LW::Exception::RecordNotFound':
             self._make_excp(self.errors[0])
 
     def parse_body(self):
