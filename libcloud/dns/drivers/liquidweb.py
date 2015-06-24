@@ -40,8 +40,8 @@ class LiquidWebDNSDriver(DNSDriver):
 
     def _to_record(self, item, zone):
         extra = None
-        record = Record(id=item[''], name=item['name'], type=item['type'],
-                data=item['data'], zone=zone, driver=self, extra=extra)
+        record = Record(id=item['id'], name=item['name'], type=item['type'],
+                data=item['rdata'], zone=zone, driver=self, extra=extra)
 
         return record
 
@@ -99,4 +99,14 @@ class LiquidWebDNSDriver(DNSDriver):
         zones = self._to_zones(response)
 
         return zones[0]
+
+    def list_records(self, zone):
+        action = '/v1/Network/DNS/Record/list'
+        data = json.dumps({'params':{'zone_id':zone.id}})
+        response, errors = self.connection.request(action=action, method='POST',
+                data=data).parse_body()
+
+        records =self._to_records(response[0], zone=zone)
+
+        return records
 
