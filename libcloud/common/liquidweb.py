@@ -1,12 +1,21 @@
 import base64
 
+import ipdb
 from libcloud.common.base import JsonResponse
 from libcloud.common.base import ConnectionUserAndKey
 from libcloud.utils.py3 import b
 from libcloud.utils.py3 import PY3
 
+__all__ = [
+        'API_HOST',
+        'LiquidWebException',
+        'LiquidWebResponse',
+        'LiquidWebConnection',
+            ]
+
+
 #Endpoint for liquidweb api.
-API_HOST = 'https://api.stormondemand.com'
+API_HOST = 'api.stormondemand.com'
 
 
 class LiquidWebException(Exception):
@@ -24,11 +33,14 @@ class LiquidWebException(Exception):
 
 
 class LiquidWebResponse(JsonResponse):
+    objects = None
+    errors = None
+    error_dict = {}
 
     def __init__(self, response, connection):
         self.connection = connection
 
-        self.headers = dict(response.get_headers)
+        self.headers = dict(response.getheaders())
         self.error = response.reason
         self.status = response.status
 
@@ -39,14 +51,44 @@ class LiquidWebResponse(JsonResponse):
             self.body = response._original_data
         else:
             self.body = self._decompress_response(body=response.read(),
-                                                  headers=self.headers())
+                                                  headers=self.headers)
 
         if PY3:
             self.body = b(self.body).decode('utf-8')
 
+        self.objects, self.errors = self.parse_body()
+        if not self.success:
+            self._make_excp(self.errors[0])
+
     def parse_body(self):
-        js = super(LiquidWebResponse).parse_body()
-        return js
+        data = []
+        errors = []
+        js = super(LiquidWebResponse, self).parse_body()
+        ipdb.set_trace()
+        if 'items' in js:
+            data.append(js['items'])
+
+        if 'name' in js:
+            data.append(js)
+
+        if 'error_class' in js:
+            self.error_dict['ERRORCODE'] = self.status
+            self.error_dict['ERRORMESSAGE'] = js['error_class']
+            errors.append(self.error_dict)
+
+        return (data, errors)
+
+    def success(self):
+        """
+        Returns ``True`` if our request is successful.
+        """
+        return (len(self.errors) == 0)
+
+    def _make_excp(self, error):
+        """
+        Raise LiquidWebException.
+        """
+        raise LiquidWebException(error['ERRORCODE'], error['ERRORMESSAGE'])
 
 
 class LiquidWebConnection(ConnectionUserAndKey):
@@ -59,7 +101,7 @@ class LiquidWebConnection(ConnectionUserAndKey):
         authorization = 'Basic ' + encoded
 
         headers['Authorization'] = authorization
+        headers['Content-Type'] = 'application/json'
 
         return headers
-
 
