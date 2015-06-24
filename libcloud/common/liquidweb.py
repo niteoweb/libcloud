@@ -25,6 +25,9 @@ class LiquidWebException(Exception):
 
 class LiquidWebResponse(JsonResponse):
 
+    def __init__(self, response, connection):
+        pass
+
     def parse_body(self):
         js = super(LiquidWebResponse).parse_body()
         return js
