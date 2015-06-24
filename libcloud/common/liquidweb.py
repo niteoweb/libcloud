@@ -1,5 +1,9 @@
+import base64
+
 from libcloud.common.base import JsonResponse
 from libcloud.common.base import ConnectionUserAndKey
+from libcloud.utils.py3 import b
+
 
 #Endpoint for liquidweb api.
 API_HOST = 'https://api.stormondemand.com'
@@ -31,6 +35,12 @@ class LiquidWebConnection(ConnectionUserAndKey):
     responseCls = LiquidWebResponse
 
     def add_default_headers(self, headers):
-        pass
+        b64string = b('%s:%s') % (self.user_id, self.key)
+        encoded = base64.b64encode(b64string).decode('utf-8')
+        authorization = 'Basic ' + encoded
+
+        headers['Authorization'] = authorization
+
+        return headers
 
 
