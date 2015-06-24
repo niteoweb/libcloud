@@ -59,3 +59,12 @@ class LiquidWebDNSDriver(DNSDriver):
 
         return zones[0]
 
+    def delete_zone(self, zone):
+        action = '/v1/Network/DNS/Zone/delete'
+        data = json.dumps({'params':{'id':zone.id}})
+        response, errors = self.connection.request(action=action, method='POST',
+                data=data).parse_body()
+
+        return zone.domain in response
+
+

@@ -72,6 +72,9 @@ class LiquidWebResponse(JsonResponse):
         if 'name' in js:
             data.append(js)
 
+        if 'deleted' in js:
+            data.append(js['deleted'])
+
         if 'error_class' in js:
             self.error_dict['ERRORCODE'] = self.status
             self.error_dict['ERRORMESSAGE'] = js['error_class']
