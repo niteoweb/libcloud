@@ -3,7 +3,7 @@ import base64
 from libcloud.common.base import JsonResponse
 from libcloud.common.base import ConnectionUserAndKey
 from libcloud.utils.py3 import b
-
+from libcloud.utils.py3 import PY3
 
 #Endpoint for liquidweb api.
 API_HOST = 'https://api.stormondemand.com'
@@ -26,7 +26,23 @@ class LiquidWebException(Exception):
 class LiquidWebResponse(JsonResponse):
 
     def __init__(self, response, connection):
-        pass
+        self.connection = connection
+
+        self.headers = dict(response.get_headers)
+        self.error = response.reason
+        self.status = response.status
+
+        #This attribute is used when usng LoggingConnection
+        original_data = getattr(response, '_original_data', None)
+
+        if original_data:
+            self.body = response._original_data
+        else:
+            self.body = self._decompress_response(body=response.read(),
+                                                  headers=self.headers())
+
+        if PY3:
+            self.body = b(self.body).decode('utf-8')
 
     def parse_body(self):
         js = super(LiquidWebResponse).parse_body()
