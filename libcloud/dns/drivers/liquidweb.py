@@ -65,6 +65,13 @@ class LiquidWebDNSDriver(DNSDriver):
         response, errors = self.connection.request(action=action, method='POST',
                 data=data).parse_body()
 
+        if (len(errors) !=0 and errors[0]['ERRORMESSAGE'] ==
+                'LW::Exception::RecordNotFound'):
+            raise ZoneDoesNotExistError(zone_id=zone.id, value='', driver=self)
+
         return zone.domain in response
+
+    def create_zone(self, zone_id):
+        pass
 
 
