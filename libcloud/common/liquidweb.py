@@ -26,10 +26,10 @@ class LiquidWebException(Exception):
         self.args = (code, message)
 
     def __str__(self):
-        return "%(u) %s" % (self.code, self.message)
+        return "%s  %s" % (self.code, self.message)
 
     def __repr__(self):
-        return "LiquidWebException %u '%s'" % (self.code, self.message)
+        return "LiquidWebException %s %s" % (self.code, self.message)
 
 
 class LiquidWebResponse(JsonResponse):
