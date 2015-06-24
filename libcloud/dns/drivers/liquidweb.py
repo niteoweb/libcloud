@@ -1,9 +1,10 @@
 import ipdb
 import json
 from libcloud.common.liquidweb import LiquidWebResponse, LiquidWebConnection
-from libcloud.dns.base import DNSDriver, Zone
+from libcloud.dns.base import DNSDriver, Zone, Record
 from libcloud.dns.types import Provider
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
+
 
 __all__ = [
         'LiquidWebDNSDriver'
@@ -36,6 +37,20 @@ class LiquidWebDNSDriver(DNSDriver):
             zones.append(self._to_zone(item))
 
         return zones
+
+    def _to_record(self, item, zone):
+        extra = None
+        record = Record(id=item[''], name=item['name'], type=item['type'],
+                data=item['data'], zone=zone, driver=self, extra=extra)
+
+        return record
+
+    def _to_records(self, items, zone):
+        records = []
+        for item in items:
+            records.append(self._to_record(item, zone))
+
+        return records
 
     def list_zones(self):
         action = '/v1/Network/DNS/Zone/list'
