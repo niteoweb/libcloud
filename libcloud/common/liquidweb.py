@@ -58,8 +58,10 @@ class LiquidWebResponse(JsonResponse):
 
         self.objects, self.errors = self.parse_body()
         #ipdb.set_trace()
-        if not self.success() and self.errors[0]['ERRORMESSAGE'] != 'LW::Exception::RecordNotFound':
-            self._make_excp(self.errors[0])
+        if not self.success() and (self.errors[0]['ERRORMESSAGE'] !=
+                'LW::Exception::RecordNotFound' and
+                    self.errors[0]['ERRORMESSAGE'] != 'LW::Exception::DuplicateRecord'):
+            raise self._make_excp(self.errors[0])
 
     def parse_body(self):
         data = []
@@ -92,7 +94,7 @@ class LiquidWebResponse(JsonResponse):
         """
         Raise LiquidWebException.
         """
-        raise LiquidWebException(error['ERRORCODE'], error['ERRORMESSAGE'])
+        return LiquidWebException(error['ERRORCODE'], error['ERRORMESSAGE'])
 
 
 class LiquidWebConnection(ConnectionUserAndKey):

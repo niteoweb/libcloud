@@ -3,7 +3,7 @@ import json
 from libcloud.common.liquidweb import LiquidWebResponse, LiquidWebConnection
 from libcloud.dns.base import DNSDriver, Zone
 from libcloud.dns.types import Provider
-from libcloud.dns.types import ZoneDoesNotExistError
+from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
 
 __all__ = [
         'LiquidWebDNSDriver'
@@ -72,6 +72,16 @@ class LiquidWebDNSDriver(DNSDriver):
         return zone.domain in response
 
     def create_zone(self, zone_id):
-        pass
+        action = '/v1/Network/DNS/Zone/create'
+        data = json.dumps({'params':{'name':zone_id}})
+        response, errors = self.connection.request(action=action, method='POST',
+                data=data).parse_body()
 
+        if (len(errors) != 0 and errors[0]['ERRORMESSAGE'] ==
+                'LW::Exception::DuplicateRecord'):
+            raise ZoneAlreadyExistsError(zone_id=zone_id, value='', driver=self)
+
+        zones = self._to_zones(response)
+
+        return zones[0]
 
