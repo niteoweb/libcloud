@@ -62,6 +62,16 @@ class LiquidWebTests(unittest.TestCase):
         else:
             self.fail('Exception was not thrown')
 
+    def test_get_zone_success(self):
+        LiquidWebMockHttp.type = 'GET_ZONE_SUCCESS'
+        zone = self.driver.get_zone(zone_id='13')
+
+        self.assertEqual(zone.id, '13')
+        self.assertEqual(zone.domain, 'blogtest.com')
+        self.assertEqual(zone.type, 'NATIVE')
+        self.assertEqual(zone.ttl, None)
+        self.assertEqual(zone.driver, self.driver)
+
 
 class LiquidWebMockHttp(MockHttp):
     fixtures = DNSFileFixtures('liquidweb')
@@ -80,6 +90,10 @@ class LiquidWebMockHttp(MockHttp):
         body = self.fixtures.load('zone_does_not_exist.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
+    def _v1_Network_DNS_Zone_details_GET_ZONE_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('get_zone.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
     sys.exit(unittest.main())
