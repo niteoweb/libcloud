@@ -52,6 +52,16 @@ class LiquidWebTests(unittest.TestCase):
         self.assertEqual(third_zone.driver, self.driver)
         self.assertEqual(third_zone.ttl, None)
 
+    def test_get_zone_zone_does_not_exist(self):
+        LiquidWebMockHttp.type = 'ZONE_DOES_NOT_EXIST'
+        try:
+            self.driver.get_zone(zone_id='13')
+        except ZoneDoesNotExistError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.zone_id, '13')
+        else:
+            self.fail('Exception was not thrown')
+
 
 class LiquidWebMockHttp(MockHttp):
     fixtures = DNSFileFixtures('liquidweb')
@@ -63,6 +73,11 @@ class LiquidWebMockHttp(MockHttp):
     def _v1_Network_DNS_Zone_list_EMPTY_ZONES_LIST(self, method, url, body,
             headers):
         body = self.fixtures.load('empty_zones_list.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Zone_details_ZONE_DOES_NOT_EXIST(self, method, url,
+            body, headers):
+        body = self.fixtures.load('zone_does_not_exist.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 
