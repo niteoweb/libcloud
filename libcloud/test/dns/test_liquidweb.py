@@ -38,17 +38,17 @@ class LiquidWebTests(unittest.TestCase):
         self.assertEqual(zone.driver, self.driver)
         self.assertEqual(zone.ttl, None)
 
-        second_zone = zone[1]
-        self.assertEqual(second_zone.id, '')
-        self.assertEqual(second_zone.domain, '')
-        self.assertEqual(second_zone.type, '')
+        second_zone = zones[1]
+        self.assertEqual(second_zone.id, '378449')
+        self.assertEqual(second_zone.domain, 'oltjanotest.com')
+        self.assertEqual(second_zone.type, 'NATIVE')
         self.assertEqual(second_zone.driver, self.driver)
         self.assertEqual(second_zone.ttl, None)
 
-        third_zone = zone[2]
-        self.assertEqual(third_zone.id, '')
-        self.assertEqual(third_zone.domain, '')
-        self.assertEqual(third_zone.type, '')
+        third_zone = zones[2]
+        self.assertEqual(third_zone.id, '378450')
+        self.assertEqual(third_zone.domain, 'pythontest.com')
+        self.assertEqual(third_zone.type, 'NATIVE')
         self.assertEqual(third_zone.driver, self.driver)
         self.assertEqual(third_zone.ttl, None)
 
