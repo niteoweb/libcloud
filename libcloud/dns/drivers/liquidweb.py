@@ -4,6 +4,7 @@ from libcloud.common.liquidweb import LiquidWebResponse, LiquidWebConnection
 from libcloud.dns.base import DNSDriver, Zone, Record
 from libcloud.dns.types import Provider
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
+from libcloud.dns.types import RecordDoesNotExistError
 
 
 __all__ = [
@@ -110,3 +111,54 @@ class LiquidWebDNSDriver(DNSDriver):
 
         return records
 
+    def get_record(self, zone_id, record_id):
+        zone = self.get_zone(zone_id=zone_id)
+        action = '/v1/Network/DNS/Record/details'
+        data = json.dumps({'params':{'id':record_id}})
+        response, errors = self.connection.request(action=action, method='POST',
+                data=data).parse_body()
+        #ipdb.set_trace()
+        if len(errors) != 0 and errors[0]['ERRORMESSAGE'] == 'LW::Exception::RecordNotFound':
+            raise RecordDoesNotExistError(record_id=record_id, driver=self,
+                            value='')
+        #ipdb.set_trace()
+        records = self._to_records(response, zone=zone)
+
+        return records[0]
+
+    def delete_record(self, record):
+        action = '/v1/Network/DNS/Record/delete'
+        data = json.dumps({'params':{'id':record.id}})
+        response, errors = self.connection.request(action=action, method='POST',
+                data=data).parse_body()
+
+        if len(errors) != 0 and errors[0]['ERRORMESSAGE'] == 'LW::Exception::RecordNotFound':
+            raise RecordDoesNotExistError(record_id=record.id, driver=self,
+                    value='')
+
+        return record.id in response
+
+    def create_record(self, name, zone, type, data, extra):
+        action = '/v1/Network/DNS/Record/create'
+        rdata = extra.get('rdata')
+        region_id = extra.get('region_id')
+        ttl = extra.get('ttl')
+        data = json.dumps({'params':
+                             {'name':name,
+                              'rdata':data ,
+                              'region_overrides':[{'rdata':rdata, 'region_id':region_id}],
+                              'zone':zone.domain,
+                              'ttl':ttl,
+                              'type':type,
+                              'zone_id':zone.id
+                                }
+                            }
+                                )
+        response, errors = self.connection.request(action=action, method='POST',
+                data=data).parse_body()
+
+        #if len(errors) != 0 and errors[0]['ERRORMESSAGE'] == 'LW::Exception::DuplicateRecord':
+        #    raise RecordAlreadyExistsError(record_id=
+        records = self._to_records(response)
+
+        return records[0]
