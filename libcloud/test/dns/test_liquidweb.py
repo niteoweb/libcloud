@@ -19,6 +19,8 @@ class LiquidWebTests(unittest.TestCase):
         LiquidWebDNSDriver.connectionCls.conn_classes = (None,
                 LiquidWebMockHttp)
         self.driver = LiquidWebDNSDriver(LIQUIDWEB_PARAMS)
+        self.test_zone = Zone(id='11', type='master', ttl=None,
+                domain='example.com', extra={}, driver=self.driver)
 
     def test_list_zones_empty(self):
         LiquidWebMockHttp.type = 'EMPTY_ZONES_LIST'
@@ -72,6 +74,12 @@ class LiquidWebTests(unittest.TestCase):
         self.assertEqual(zone.ttl, None)
         self.assertEqual(zone.driver, self.driver)
 
+    def test_delete_zone_success(self):
+        LiquidWebMockHttp.type = 'DELETE_ZONE_SUCCESS'
+        zone = self.test_zone
+        status = self.driver.delete_zone(zone=zone)
+
+        self.assertEqual(status, True)
 
 class LiquidWebMockHttp(MockHttp):
     fixtures = DNSFileFixtures('liquidweb')
@@ -93,6 +101,11 @@ class LiquidWebMockHttp(MockHttp):
     def _v1_Network_DNS_Zone_details_GET_ZONE_SUCCESS(self, method, url,
             body, headers):
         body = self.fixtures.load('get_zone.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Networks_DNS_Zone_delete_DELETE_ZONE_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('delete_zone.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
