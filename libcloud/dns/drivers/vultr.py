@@ -118,8 +118,8 @@ class VultrDNSDriver(DNSDriver):
 
         action = '/v1/dns/list'
         params = {'api_key':self.key}
-        data = self.connection.request(action=action, params=params).parse_body()[0]
-        zones = self._to_zones(data)
+        response, errors = self.connection.request(action=action, params=params).parse_body()
+        zones = self._to_zones(response[0])
 
         if not self.zone_exists(zone_id, zones):
             raise ZoneDoesNotExistError(value=None,zone_id=zone_id,driver=self)
