@@ -4,7 +4,7 @@ from libcloud.common.liquidweb import LiquidWebResponse, LiquidWebConnection
 from libcloud.dns.base import DNSDriver, Zone, Record
 from libcloud.dns.types import Provider
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
-from libcloud.dns.types import RecordDoesNotExistError
+from libcloud.dns.types import RecordDoesNotExistError, RecordAlreadyExistsError
 
 
 __all__ = [
@@ -138,27 +138,27 @@ class LiquidWebDNSDriver(DNSDriver):
 
         return record.id in response
 
-    def create_record(self, name, zone, type, data, extra):
+    def create_record(self, name, zone, rtype, data, extra):
         action = '/v1/Network/DNS/Record/create'
-        rdata = extra.get('rdata')
-        region_id = extra.get('region_id')
+        #rdata = extra.get('rdata')
+        #region_id = extra.get('region_id')
         ttl = extra.get('ttl')
         data = json.dumps({'params':
                              {'name':name,
                               'rdata':data ,
-                              'region_overrides':[{'rdata':rdata, 'region_id':region_id}],
+                              #'region_overrides':[{'rdata':rdata, 'region_id':region_id}],
                               'zone':zone.domain,
                               'ttl':ttl,
-                              'type':type,
+                              'type':rtype,
                               'zone_id':zone.id
                                 }
                             }
                                 )
         response, errors = self.connection.request(action=action, method='POST',
                 data=data).parse_body()
-
-        #if len(errors) != 0 and errors[0]['ERRORMESSAGE'] == 'LW::Exception::DuplicateRecord':
-        #    raise RecordAlreadyExistsError(record_id=
-        records = self._to_records(response)
+        ipdb.set_trace()
+        if len(errors) != 0 and errors[0]['ERRORMESSAGE'] == 'LW::Exception::DuplicateRecord':
+            raise RecordAlreadyExistsError(record_id=name, value='', driver=self)
+        records = self._to_records(response, zone=zone)
 
         return records[0]
