@@ -1,5 +1,6 @@
-import pdb
+import ipdb
 
+import json
 from libcloud.utils.py3 import urllib
 from libcloud.common.vultr import VultrConnection, VultrResponse
 from libcloud.dns.base import DNSDriver, Zone, Record
@@ -22,6 +23,9 @@ class VultrDNSConnection(VultrConnection):
 
 
 class VultrDNSDriver(DNSDriver):
+    HEADERS = {
+                "Content-type": "application/x-www-form-urlencoded",
+                "Accept": "text/plain"}
     type = Provider.VULTR
     name = 'Vultr DNS'
     website = 'http://www.vultr.com/'
@@ -96,9 +100,9 @@ class VultrDNSDriver(DNSDriver):
 
         action = '/v1/dns/list'
         params = {'api_key':self.key}
-        zones = self.connection.request(action=action, params=params).parse_body()[0]
-
-        zones = self._to_zones(zones)
+        response, errors = self.connection.request(action=action, params=params).parse_body()
+        #ipdb.set_trace()
+        zones = self._to_zones(response[0])
 
         return zones
 
@@ -167,16 +171,12 @@ class VultrDNSDriver(DNSDriver):
             raise ZoneDoesNotExistError(value='', driver=self, zone_id=
                     zone.domain)
 
-        records = []
         action = '/v1/dns/records'
         params = {'domain':zone.domain}
-        pure_data = self.connection.request(action=action, params=params)
-        response_records = pure_data.parse_body()[0]
+        response, errors = self.connection.request(action=action, params=params).parse_body()
+        records = self._to_records(response[0], zone=zone)
 
-
-        records.append(self._to_records(response_records, zone=zone))
-
-        return records[0]
+        return records
 
 
     def create_zone(self, zone_id, type='master', ttl=None, extra=None):
@@ -199,7 +199,7 @@ class VultrDNSDriver(DNSDriver):
             raise ZoneAlreadyExistsError(value='', driver=self, zone_id=zone_id)
 
         self.connection.request(params=params,action=action,data=data,
-                method='POST',headers=self.HEADERS)
+                method='POST')
         zone = Zone(id=zone_id,domain=zone_id,type=type,ttl=ttl,
                 driver=self,extra=extra)
 
@@ -215,7 +215,7 @@ class VultrDNSDriver(DNSDriver):
             raise ZoneDoesNotExistError(value='', driver=self, zone_id=zone.domain)
 
         response = self.connection.request(params=params,action=action,
-                data=data,method='POST',headers=self.HEADERS)
+                data=data,method='POST')
 
         return response.status == 200
 
@@ -230,20 +230,19 @@ class VultrDNSDriver(DNSDriver):
             raise RecordDoesNotExistError(value='', driver=self, record_id=record.id)
 
         response = self.connection.request(action=action, params=params,
-                data=data, method='POST', headers=self.HEADERS)
+                data=data, method='POST')
 
         return response.status == 200
 
     def create_record(self, name, zone, type, data, extra=None):
-
+        ret_record = None
         old_records_list = self.list_records(zone=zone)
         #check if record already exists
         #if exists raise RecordAlreadyExistsError
         for record in old_records_list:
-            if record.name == name:
+            if record.name == name and  record.data == data:
                 raise RecordAlreadyExistsError(value='', driver=self,
                         record_id=record.id)
-        record = None
 
         if extra and extra.get('priority'):
             priority = int(extra['priority'])
@@ -268,14 +267,14 @@ class VultrDNSDriver(DNSDriver):
         action = '/v1/dns/create_record'
 
         self.connection.request(action=action, params=params, data=encoded_data,
-                method='POST', headers=self.HEADERS)
+                method='POST')
 
         updated_zone_records = zone.list_records()
         for record in updated_zone_records:
-            if record.name == name:
-                record = record
+            if record.name == name and record.data == data:
+                ret_record = record
 
-        return record
+        return ret_record
 
     def zone_exists(self, zone_id, zones_list):
         """

@@ -1,3 +1,4 @@
+import ipdb
 from libcloud.common.base import ConnectionKey, JsonResponse
 from libcloud.utils.misc import lowercase_keys
 from libcloud.utils.py3 import PY3, b
@@ -18,7 +19,7 @@ class VultrResponse(JsonResponse):
 
     objects = None
     error_dict = {}
-    errors_list = []
+    errors = None
     ERROR_CODE_MAP = {
 
         400: "Invalid API location. Check the URL that you are using.",
@@ -48,42 +49,44 @@ class VultrResponse(JsonResponse):
 
         if PY3:
             self.body = b(self.body).decode('utf-8')
+        #ipdb.set_trace()
 
-        if self.status in self.ERROR_CODE_MAP:
-            self.errors_list.append(self.status)
-            self.error_dict['ERRORCODE'] = self.status
-            self.error_dict['ERRORMESSAGE'] = self.ERROR_CODE_MAP[self.status]
+        self.objects, self.errors  = self.parse_body()
 
         if not self.success():
-           raise self._make_excp(self.error_dict)
-
-        self.objects = self.parse_body()
+            raise self._make_excp(self.errors[0])
 
     def parse_body(self):
         """
         Returns JSON data in a python list.
         """
         json_objects = []
+        errors = []
+
+        if self.status in self.ERROR_CODE_MAP:
+            self.error_dict['ERRORCODE'] = self.status
+            self.error_dict['ERRORMESSAGE'] = self.ERROR_CODE_MAP[self.status]
+            errors.append(self.error_dict)
 
         js = super(VultrResponse, self).parse_body()
         if isinstance(js, dict):
             js = [js]
-
+        #ipdb.set_trace()
         json_objects.append(js)
 
-        return json_objects
+        return (json_objects, errors)
 
-    def _make_excp(self, error_dict):
+    def _make_excp(self, error):
         """
         Convert API error to a VultrException instance
         """
 
-        return VultrException(error_dict['ERRORCODE'], error_dict['ERRORMESSAGE'])
+        return VultrException(error['ERRORCODE'], error['ERRORMESSAGE'])
 
 
     def success(self):
 
-        return len(self.errors_list) == 0
+        return len(self.errors) == 0
 
 
 class VultrConnection(ConnectionKey):
@@ -109,7 +112,10 @@ class VultrConnection(ConnectionKey):
         Returns default headers such as content-type.
         Returns a dictionary.
         """
-        headers['Content-Type'] = 'application/x-www-form-url-encoded'
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
+        headers["Accept"] = "text/plain"
+
+        return headers
 
     def set_path(self):
         self.path = '/v/'
