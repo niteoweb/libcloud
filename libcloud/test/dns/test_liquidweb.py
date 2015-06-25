@@ -26,6 +26,32 @@ class LiquidWebTests(unittest.TestCase):
 
         self.assertEqual(zones, [])
 
+    def test_list_zones_success(self):
+        zones = self.driver.list_zones()
+
+        self.assertEqual(len(zones), 3)
+
+        zone = zones[0]
+        self.assertEqual(zone.id, '378451')
+        self.assertEqual(zone.domain, 'blogtest.com')
+        self.assertEqual(zone.type, 'NATIVE')
+        self.assertEqual(zone.driver, self.driver)
+        self.assertEqual(zone.ttl, None)
+
+        second_zone = zone[1]
+        self.assertEqual(second_zone.id, '')
+        self.assertEqual(second_zone.domain, '')
+        self.assertEqual(second_zone.type, '')
+        self.assertEqual(second_zone.driver, self.driver)
+        self.assertEqual(second_zone.ttl, None)
+
+        third_zone = zone[2]
+        self.assertEqual(third_zone.id, '')
+        self.assertEqual(third_zone.domain, '')
+        self.assertEqual(third_zone.type, '')
+        self.assertEqual(third_zone.driver, self.driver)
+        self.assertEqual(third_zone.ttl, None)
+
 
 class LiquidWebMockHttp(MockHttp):
     fixtures = DNSFileFixtures('liquidweb')
