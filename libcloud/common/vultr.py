@@ -1,4 +1,3 @@
-import ipdb
 from libcloud.common.base import ConnectionKey, JsonResponse
 from libcloud.utils.misc import lowercase_keys
 from libcloud.utils.py3 import PY3, b
@@ -49,10 +48,8 @@ class VultrResponse(JsonResponse):
 
         if PY3:
             self.body = b(self.body).decode('utf-8')
-        #ipdb.set_trace()
 
         self.objects, self.errors  = self.parse_body()
-
         if not self.success():
             raise self._make_excp(self.errors[0])
 
@@ -71,7 +68,7 @@ class VultrResponse(JsonResponse):
         js = super(VultrResponse, self).parse_body()
         if isinstance(js, dict):
             js = [js]
-        #ipdb.set_trace()
+
         json_objects.append(js)
 
         return (json_objects, errors)
