@@ -81,6 +81,18 @@ class LiquidWebTests(unittest.TestCase):
 
         self.assertEqual(status, True)
 
+    def test_delete_zone_zone_does_not_exist(self):
+        LiquidWebMockHttp.type = 'DELETE_ZONE_ZONE_DOES_NOT_EXIST'
+        zone = self.test_zone
+        try:
+            self.driver.delete_zone(zone=zone)
+        except ZoneDoesNotExistError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.zone_id, '11')
+        else:
+            self.fail('Exception was not thrown')
+
+
 class LiquidWebMockHttp(MockHttp):
     fixtures = DNSFileFixtures('liquidweb')
 
@@ -103,9 +115,14 @@ class LiquidWebMockHttp(MockHttp):
         body = self.fixtures.load('get_zone.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
-    def _v1_Networks_DNS_Zone_delete_DELETE_ZONE_SUCCESS(self, method, url,
+    def _v1_Network_DNS_Zone_delete_DELETE_ZONE_SUCCESS(self, method, url,
             body, headers):
-        body = self.fixtures.load('delete_zone.json')
+        body = self.fixtures.load('delete_zone_success.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Zone_delete_DELETE_ZONE_ZONE_DOES_NOT_EXIST(self,
+            method, url, body, header):
+        body = self.fixtures.load('zone_does_not_exist.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
