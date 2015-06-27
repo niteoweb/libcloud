@@ -1,5 +1,8 @@
+import ipdb
 from libcloud.common.base import XmlResponse
 from libcloud.common.base import ConnectionKey
+from libcloud.utils.py3 import b, PY3
+
 
 __all__ = [
         'ZonomiResponse',
@@ -8,10 +11,47 @@ __all__ = [
 
 
 #Endpoint for Zonomi API.
-API_HOST = 'https://zonomi.com/app'
+API_HOST = 'zonomi.com'
 
 class ZonomiResponse(XmlResponse):
-    pass
+
+    def __init__(self, response, connection):
+        self.connection = connection
+        self.headers = dict(response.getheaders())
+        self.error = response.reason
+        self.status = response.status
+
+        #This attribute is used when usng LoggingConnection
+        original_data = getattr(response, '_original_data', None)
+        if original_data:
+            self.body = response._original_data
+        else:
+            self.body = self._decompress_response(body=response.read(),
+                                                                                                                           headers=self.headers)
+
+        if PY3:
+            self.body = b(self.body).decode('utf-8')
+
+    def parse_body(self):
+        data = []
+        errors = []
+        xml_body = super(ZonomiResponse, self).parse_body()
+        childrens = xml_body.getchildren()
+        actions = childrens[2]
+        actions_childrens = actions.getchildren()
+        action  = actions_childrens[0]
+        action_childrens = action.getchildren()
+        for child in action_childrens:
+            if child.tag == 'zone':
+                data.append(child.attrib)
+
+        return (data, errors)
+
+    def success(self):
+        pass
+
+    def _make_excp(self):
+        pass
 
 
 class ZonomiConnection(ConnectionKey):
@@ -32,4 +72,6 @@ class ZonomiConnection(ConnectionKey):
         Adds default headers needed to perform a successful
         request such as Content-Type, User-Agent.
         """
+        headers['Content-Type'] = 'text/xml;charset=UTF-8'
+
         return headers

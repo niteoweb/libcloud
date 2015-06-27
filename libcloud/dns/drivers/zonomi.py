@@ -1,7 +1,7 @@
 #Zonomi DNSDriver
 import ipdb
 from libcloud.common.zonomi import ZonomiConnection, ZonomiResponse
-from libcloud.dns.base import DNSDriver
+from libcloud.dns.base import DNSDriver, Zone
 from libcloud.dns.types import Provider
 from libcloud.utils.py3 import urllib2
 
@@ -23,10 +23,26 @@ class ZonomiDNSDriver(DNSDriver):
     website = 'https://zonomi.com'
     connectionCls = ZonomiDNSConnection
 
+    def _to_zone(self, item):
+        zone = Zone(id=item['name'], domain=item['name'], type=item['type'],
+                driver=self, extra={}, ttl=None)
+
+        return zone
+
+    def _to_zones(self, items):
+        zones = []
+        for item in items:
+            zones.append(self._to_zone(item))
+
+        return zones
 
     def list_zones(self):
-        url = '%s/dns/dyndns.jsp?action=QUERYZONES&api_key=%s' % (self.connection.host, self.key)
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req).read()
-        ipdb.set_trace()
-        return response
+        action = '/app/dns/dyndns.jsp?'
+        params = {'action':'QUERYZONES', 'api_key':self.key}
+        response, errors = self.connection.request(action=action,
+                params=params).parse_body()
+
+        zones = self._to_zones(response)
+        zone = zones[0]
+
+        return zone
