@@ -102,6 +102,51 @@ class LiquidWebTests(unittest.TestCase):
         self.assertEqual(zone.ttl, None)
         self.assertEqual(zone.driver, self.driver)
 
+    def test_create_zone_zone_zone_already_exists(self):
+        LiquidWebMockHttp.type = 'CREATE_ZONE_ZONE_ALREADY_EXISTS'
+        try:
+            self.driver.create_zone(zone_id='test.com')
+        except ZoneAlreadyExistsError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.zone_id, 'test.com')
+        else:
+            self.fail('Exception was not thrown')
+
+    def test_list_records_empty(self):
+        LiquidWebMockHttp.type = 'EMPTY_RECORDS_LIST'
+        zone = self.test_zone
+        records = self.driver.list_records(zone=zone)
+
+        self.assertEqual(records, [])
+
+    def test_list_records_success(self):
+        LiquidWebMockHttp.type = 'LIST_RECORDS_SUCCESS'
+        zone = self.test_zone
+        records = self.driver.list_records(zone=zone)
+
+        self.assertEqual(len(records), 3)
+
+        record = records[0]
+        self.assertEqual(record.id, '')
+        self.assertEqual(record.type, '')
+        self.assertEqual(record.name, '')
+        self.assertEqual(record.data, '127.0.0.1')
+        self.assertEqual(record.zone, self.test_zone)
+
+        second_record = records[1]
+        self.assertEqual(second_record.id, '')
+        self.assertEqual(second_record.type, '')
+        self.assertEqual(second_record.name, '')
+        self.assertEqual(second_record.data, '')
+        self.assertEqual(second_record.zone, self.test_zone)
+
+        third_record = records[2]
+        self.assertEqual(third_record.id, '')
+        self.assertEqual(third_record.type, '')
+        self.assertEqual(third_record.name, '')
+        self.assertEqual(third_record.data, '')
+        self.assertEqual(third_record.zone, self.test_zone)
+
 
 class LiquidWebMockHttp(MockHttp):
     fixtures = DNSFileFixtures('liquidweb')
@@ -138,6 +183,16 @@ class LiquidWebMockHttp(MockHttp):
     def _v1_Network_DNS_Zone_create_CREATE_ZONE_SUCCESS(self, method, url, body,
             headers):
         body = self.fixtures.load('create_zone_success.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Zone_create_CREATE_ZONE_ZONE_ALREADY_EXISTS(self, method,
+                url, body, headers):
+        body = self.fixtures.load('duplicate_record.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_list_EMPTY_RECORDS_LIST(self, method,
+            url, body,headers):
+        body = self.fixtures.load('empty_records_list.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
