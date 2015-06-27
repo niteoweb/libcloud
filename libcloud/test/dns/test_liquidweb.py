@@ -127,25 +127,45 @@ class LiquidWebTests(unittest.TestCase):
         self.assertEqual(len(records), 3)
 
         record = records[0]
-        self.assertEqual(record.id, '')
-        self.assertEqual(record.type, '')
-        self.assertEqual(record.name, '')
+        self.assertEqual(record.id, '13')
+        self.assertEqual(record.type, 'A')
+        self.assertEqual(record.name, 'nerd.myshit.com')
         self.assertEqual(record.data, '127.0.0.1')
         self.assertEqual(record.zone, self.test_zone)
+        self.assertEqual(record.zone.id, '11')
 
         second_record = records[1]
-        self.assertEqual(second_record.id, '')
-        self.assertEqual(second_record.type, '')
-        self.assertEqual(second_record.name, '')
-        self.assertEqual(second_record.data, '')
+        self.assertEqual(second_record.id, '11')
+        self.assertEqual(second_record.type, 'A')
+        self.assertEqual(second_record.name, 'thisboy.myshit.com')
+        self.assertEqual(second_record.data, '127.0.0.1')
         self.assertEqual(second_record.zone, self.test_zone)
 
         third_record = records[2]
-        self.assertEqual(third_record.id, '')
-        self.assertEqual(third_record.type, '')
-        self.assertEqual(third_record.name, '')
-        self.assertEqual(third_record.data, '')
+        self.assertEqual(third_record.id, '10')
+        self.assertEqual(third_record.type, 'A')
+        self.assertEqual(third_record.name, 'visitor.myshit.com')
+        self.assertEqual(third_record.data, '127.0.0.1')
         self.assertEqual(third_record.zone, self.test_zone)
+
+    def test_get_record_record_does_not_exist(self):
+        LiquidWebMockHttp.type = 'GET_RECORD_RECORD_DOES_NOT_EXIST'
+        try:
+            self.driver.get_record(zone_id='11', record_id='13')
+        except RecordDoesNotExistError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.record_id, '13')
+        else:
+            self.fail('Exception was not thrown')
+
+    def test_get_record_success(self):
+        LiquidWebMockHttp.type = 'GET_RECORD_SUCCESS'
+        record = self.driver.get_record(zone_id='11', record_id='13')
+
+        self.assertEqual(record.id, '13')
+        self.assertEqual(record.type, 'A')
+        self.assertEqual(record.name, 'nerd.myshit.com')
+        self.assertEqual(record.data, '127.0.0.1')
 
 
 class LiquidWebMockHttp(MockHttp):
@@ -193,6 +213,31 @@ class LiquidWebMockHttp(MockHttp):
     def _v1_Network_DNS_Record_list_EMPTY_RECORDS_LIST(self, method,
             url, body,headers):
         body = self.fixtures.load('empty_records_list.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_list_LIST_RECORDS_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('records_list.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_details_GET_RECORD_RECORD_DOES_NOT_EXIST(self,
+            method, url, body, headers):
+        body = self.fixtures.load('record_does_not_exist.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Zone_details_GET_RECORD_RECORD_DOES_NOT_EXIST(self,
+            method, url, body, headers):
+        body = self.fixtures.load('get_zone.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Zone_details_GET_RECORD_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('get_zone.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_details_GET_RECORD_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('get_record.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
