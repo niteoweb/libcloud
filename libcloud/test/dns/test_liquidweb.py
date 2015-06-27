@@ -276,5 +276,15 @@ class LiquidWebMockHttp(MockHttp):
         body = self.fixtures.load('record_does_not_exist.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
+    def _v1_Network_DNS_Record_create_CREATE_RECORD_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_create_CREATE_RECORD_RECORD_ALREADY_EXISTS_ERROR(
+            self, method, url, body, headers):
+        body = self.fixtures.load('')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
 if __name__ == '__main__':
     sys.exit(unittest.main())
