@@ -21,6 +21,8 @@ class LiquidWebTests(unittest.TestCase):
         self.driver = LiquidWebDNSDriver(LIQUIDWEB_PARAMS)
         self.test_zone = Zone(id='11', type='master', ttl=None,
                 domain='example.com', extra={}, driver=self.driver)
+        self.test_record = Record(id='13', type=RecordType.A, name='example.com',
+            zone=self.test_zone, data='127.0.0.1', driver=self, extra={})
 
     def test_list_zones_empty(self):
         LiquidWebMockHttp.type = 'EMPTY_ZONES_LIST'
@@ -151,7 +153,7 @@ class LiquidWebTests(unittest.TestCase):
     def test_get_record_record_does_not_exist(self):
         LiquidWebMockHttp.type = 'GET_RECORD_RECORD_DOES_NOT_EXIST'
         try:
-            self.driver.get_record(zone_id='11', record_id='13')
+            self.driver.get_record(zone_id='13', record_id='13')
         except RecordDoesNotExistError:
             e = sys.exc_info()[1]
             self.assertEqual(e.record_id, '13')
@@ -160,12 +162,36 @@ class LiquidWebTests(unittest.TestCase):
 
     def test_get_record_success(self):
         LiquidWebMockHttp.type = 'GET_RECORD_SUCCESS'
-        record = self.driver.get_record(zone_id='11', record_id='13')
+        record = self.driver.get_record(zone_id='13', record_id='13')
 
         self.assertEqual(record.id, '13')
         self.assertEqual(record.type, 'A')
         self.assertEqual(record.name, 'nerd.myshit.com')
         self.assertEqual(record.data, '127.0.0.1')
+
+    def test_delete_record_success(self):
+        LiquidWebMockHttp.type = 'DELETE_RECORD_SUCCESS'
+        record = self.test_record
+        status = self.driver.delete_record(record=record)
+
+        self.assertEqual(status, True)
+
+    def test_delete_record_RECORD_DOES_NOT_EXIST_ERROR(self):
+        LiquidWebMockHttp.type = 'DELETE_RECORD_RECORD_DOES_NOT_EXIST'
+        record = self.test_record
+        try:
+            self.driver.delete_record(record=record)
+        except RecordDoesNotExistError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.record_id, '13')
+        else:
+            self.fail('Exception was not thrown')
+
+    def test_create_record_success(self):
+        pass
+
+    def test_create_record_record_already_exists_error(self):
+        pass
 
 
 class LiquidWebMockHttp(MockHttp):
@@ -238,6 +264,16 @@ class LiquidWebMockHttp(MockHttp):
     def _v1_Network_DNS_Record_details_GET_RECORD_SUCCESS(self, method, url,
             body, headers):
         body = self.fixtures.load('get_record.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_delete_DELETE_RECORD_SUCCESS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('delete_record.json')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _v1_Network_DNS_Record_delete_DELETE_RECORD_RECORD_DOES_NOT_EXIST(
+            self, method, url, body, headers):
+        body = self.fixtures.load('record_does_not_exist.json')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
