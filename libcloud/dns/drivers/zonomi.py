@@ -2,7 +2,7 @@
 import ipdb
 from libcloud.common.zonomi import ZonomiConnection, ZonomiResponse
 from libcloud.dns.base import DNSDriver, Zone, Record
-from libcloud.dns.types import ZoneDoesNotExistError
+from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
 from libcloud.dns.types import Provider
 from libcloud.utils.py3 import urllib2
 
@@ -60,6 +60,34 @@ class ZonomiDNSDriver(DNSDriver):
         zones = self._to_zones(response)
 
         return zones
+
+    def get_zone(self, zone_id):
+        zone = None
+        zones = self.list_zones()
+        for z in zones:
+            if z.id == zone_id:
+                zone = z
+
+        if zone is None:
+            raise ZoneDoesNotExistError(zone_id=zone_id, driver=self, value='')
+
+        return zone
+
+    def create_zone(self, zone_id):
+        action = '/app/dns/addzone.jsp?'
+        params = {'name':zone_id}
+        response, errors = self.connection.request(action=action,
+                params=params).parse_body()
+
+
+        if len(errors) != 0 and 'ERROR: This zone is already in your zone list.' in errors:
+            raise ZoneAlreadyExistsError(zone_id=zone_id, driver=self,
+                    value='')
+
+        zone = Zone(id=zone_id, domain=zone_id, type='NATIVE', ttl=None,
+                driver=self, extra={})
+
+        return zone
 
     def delete_zone(self, zone):
 
