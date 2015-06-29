@@ -39,8 +39,8 @@ class ZonomiDNSDriver(DNSDriver):
 
     def _to_record(self, item, zone):
         extra = {'ttl':item['ttl']}
-        record = Record(id=item['name'], name=item['name'], data=item['content'], type=item['type'],
-                 zone=zone, driver=self, extra=extra)
+        record = Record(id=item['name'], name=item['name'], data=item['content'],
+             type=item['type'], zone=zone, driver=self, extra=extra)
 
         return record
 
@@ -107,6 +107,10 @@ class ZonomiDNSDriver(DNSDriver):
         params = {'action':'QUERY', 'name':zone.id}
         response, errors = self.connection.request(action=action, params=
                 params).parse_body()
+
+        if len(errors) != 0 and 'ERROR: No zone found for %s' % zone.id in errors:
+            raise ZoneDoesNotExistError(zone_id=zone.id, driver=self,
+                    value='')
 
         records = self._to_records(response, zone)
 
