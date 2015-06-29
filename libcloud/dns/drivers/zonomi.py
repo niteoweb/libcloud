@@ -3,6 +3,7 @@ import ipdb
 from libcloud.common.zonomi import ZonomiConnection, ZonomiResponse
 from libcloud.dns.base import DNSDriver, Zone, Record
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
+from libcloud.dns.types import RecordAlreadyExistsError
 from libcloud.dns.types import Provider
 from libcloud.utils.py3 import urllib2
 
@@ -115,4 +116,40 @@ class ZonomiDNSDriver(DNSDriver):
         records = self._to_records(response, zone)
 
         return records
+
+    def get_record(self, record_id, zone_id):
+        pass
+
+    def delete_record(self, record):
+        pass
+
+    def create_record(self, name, zone, type, data, extra):
+        """
+        Use this to create MX and A records.
+        """
+
+        action = '/app/dns/dyndns.jsp?'
+        params = {'action':'SET', 'name':name, 'value':data,
+                'type':type}
+
+        if type == 'MX' and extra is not None:
+            params['prio'] = extra.get('prio')
+        #ipdb.set_trace()
+        response, errors = self.connection.request(action=action,
+                params=params).parse_body()
+        ipdb.set_trace()
+        if len(errors) != 0 and 'ERROR: No zone found for %s' % name in errors:
+                raise ZoneDoesNotExistError(zone_id=zone.id, driver=self,
+                                value='')
+        #we determine if an A or MX record already exists
+        #by looking at the response
+        #check the key 'skipped' in the response
+        #if this key is present, it means record
+        #already exists
+        if len(response) != 0 and response[0].get('skipped') == 'unchanged':
+            raise RecordAlreadyExistsError(record_id=name, driver=self, value='')
+
+        records = self._to_records(response, zone=zone)
+
+        return records[0]
 
