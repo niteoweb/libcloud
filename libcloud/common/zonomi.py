@@ -27,23 +27,42 @@ class ZonomiResponse(XmlResponse):
             self.body = response._original_data
         else:
             self.body = self._decompress_response(body=response.read(),
-                                                                                                                           headers=self.headers)
-
+                    headers=self.headers)
+        #ipdb.set_trace()
         if PY3:
             self.body = b(self.body).decode('utf-8')
-
+        #ipdb.set_trace()
     def parse_body(self):
+        actions = None
+        result_counts = None
+        action_childrens = None
         data = []
         errors = []
         xml_body = super(ZonomiResponse, self).parse_body()
+        #ipdb.set_trace()
+        #Error handling
+        if xml_body.text is not None and 'ERROR' in xml_body.text:
+            errors.append(xml_body.text)
+
+        #Data handling
         childrens = xml_body.getchildren()
-        actions = childrens[2]
-        actions_childrens = actions.getchildren()
-        action  = actions_childrens[0]
-        action_childrens = action.getchildren()
-        for child in action_childrens:
-            if child.tag == 'zone':
-                data.append(child.attrib)
+        #ipdb.set_trace()
+        if len(childrens) == 3:
+            result_counts = childrens[1]
+            actions = childrens[2]
+
+        if actions is not None:
+            actions_childrens = actions.getchildren()
+            action  = actions_childrens[0]
+            action_childrens = action.getchildren()
+
+        if action_childrens is not None:
+            for child in action_childrens:
+                if child.tag == 'zone' or child.tag == 'record':
+                    data.append(child.attrib)
+
+        if result_counts is not None and result_counts.attrib.get('deleted') == '1':
+            data.append('DELETED')
 
         return (data, errors)
 
