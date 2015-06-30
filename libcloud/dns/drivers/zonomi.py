@@ -102,7 +102,7 @@ class ZonomiDNSDriver(DNSDriver):
         response, errors = self.connection.request(action=action,
                 params=params).parse_body()
         #ipdb.set_trace()
-        if len(errors) != 0 and 'ERROR: No zone found for %s' % (zone.id)in errors:
+        if len(errors) != 0 and errors[0].get('ERRORCODE') == '404':
                     raise ZoneDoesNotExistError(zone_id=zone.id, driver=self,
                             value='')
 
@@ -114,7 +114,7 @@ class ZonomiDNSDriver(DNSDriver):
         response, errors = self.connection.request(action=action, params=
                 params).parse_body()
 
-        if len(errors) != 0 and 'ERROR: No zone found for %s' % zone.id in errors:
+        if len(errors) != 0 and errors[0].get('ERRORCODE') == '404':
             raise ZoneDoesNotExistError(zone_id=zone.id, driver=self,
                     value='')
 

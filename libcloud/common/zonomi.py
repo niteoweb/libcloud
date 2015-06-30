@@ -69,8 +69,13 @@ class ZonomiResponse(XmlResponse):
         #Error handling
         if xml_body.text is not None and 'ERROR' in xml_body.text:
             error_dict['ERRORCODE'] = self.status
-            error_dict['ERRORMESSAGE'] = xml_body.text
+            if xml_body.text.startswith('ERROR: No zone found for'):
+                error_dict['ERRORCODE'] = '404'
+                error_dict['ERRORMESSAGE'] = 'Not found.'
+            else:
+                error_dict['ERRORMESSAGE'] = xml_body.text
             errors.append(error_dict)
+            #ipdb.set_trace()
 
         #Data handling
         childrens = xml_body.getchildren()
