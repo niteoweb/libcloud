@@ -127,8 +127,15 @@ class ZonomiDNSDriver(DNSDriver):
 
     def delete_record(self, record):
         """
-        Use
+        Use this method to delete a record.
         """
+        action = '/app/dns/dyndns.jsp?'
+        params = {'action':'DELETE', 'name':record.name, 'type':record.type}
+        response, errors = self.connection.request(action=action, params=
+                params).parse_body()
+
+        #ipdb.set_trace()
+        return 'DELETED' in response
 
     def create_record(self, name, zone, type, data, extra):
         """
