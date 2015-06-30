@@ -39,7 +39,12 @@ class ZonomiDNSDriver(DNSDriver):
         return zones
 
     def _to_record(self, item, zone):
-        extra = {'ttl':item['ttl']}
+        """
+        :param item: `dict`
+        :param item: contains information about a record
+        such as id, name, data, type and extra info.
+        """
+        extra = {'ttl':item.get('ttl')}
         record = Record(id=item['name'], name=item['name'], data=item['content'],
              type=item['type'], zone=zone, driver=self, extra=extra)
 
@@ -137,7 +142,7 @@ class ZonomiDNSDriver(DNSDriver):
         #ipdb.set_trace()
         response, errors = self.connection.request(action=action,
                 params=params).parse_body()
-        ipdb.set_trace()
+        #ipdb.set_trace()
         if len(errors) != 0 and 'ERROR: No zone found for %s' % name in errors:
                 raise ZoneDoesNotExistError(zone_id=zone.id, driver=self,
                                 value='')
@@ -146,10 +151,17 @@ class ZonomiDNSDriver(DNSDriver):
         #check the key 'skipped' in the response
         #if this key is present, it means record
         #already exists
+        #check if record already exists, if this is True
+        #then raise RecordAlreadyExistsError
         if len(response) != 0 and response[0].get('skipped') == 'unchanged':
             raise RecordAlreadyExistsError(record_id=name, driver=self, value='')
 
+        if 'DELETED' in response:
+            for el in response[:2]:
+                if el.get('content') == data:
+                    response = [el]
+        #ipdb.set_trace()
         records = self._to_records(response, zone=zone)
-
+        #ipdb.set_trace()
         return records[0]
 
