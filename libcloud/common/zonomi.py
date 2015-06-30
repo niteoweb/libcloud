@@ -39,7 +39,7 @@ class ZonomiResponse(XmlResponse):
         data = []
         errors = []
         xml_body = super(ZonomiResponse, self).parse_body()
-        ipdb.set_trace()
+        #ipdb.set_trace()
         #Error handling
         if xml_body.text is not None and 'ERROR' in xml_body.text:
             errors.append(xml_body.text)
@@ -63,6 +63,10 @@ class ZonomiResponse(XmlResponse):
 
         if result_counts is not None and result_counts.attrib.get('deleted') == '1':
             data.append('DELETED')
+
+        if result_counts is not None and result_counts.attrib.get('deleted') == '0':
+            errors.append(result_counts.attrib)
+
 
         return (data, errors)
 

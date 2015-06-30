@@ -3,7 +3,7 @@ import ipdb
 from libcloud.common.zonomi import ZonomiConnection, ZonomiResponse
 from libcloud.dns.base import DNSDriver, Zone, Record
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
-from libcloud.dns.types import RecordAlreadyExistsError
+from libcloud.dns.types import RecordAlreadyExistsError, RecordDoesNotExistError
 from libcloud.dns.types import Provider
 from libcloud.utils.py3 import urllib2
 
@@ -134,7 +134,10 @@ class ZonomiDNSDriver(DNSDriver):
         response, errors = self.connection.request(action=action, params=
                 params).parse_body()
 
-        #ipdb.set_trace()
+        if len(errors) != 0 and errors[0].get('deleted') == '0':
+            raise RecordDoesNotExistError(record_id=record.id, driver=self,
+                    value='')
+
         return 'DELETED' in response
 
     def create_record(self, name, zone, type, data, extra):
