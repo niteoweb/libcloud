@@ -86,7 +86,8 @@ class ZonomiDNSDriver(DNSDriver):
                 params=params).parse_body()
 
 
-        if len(errors) != 0 and 'ERROR: This zone is already in your zone list.' in errors:
+        if (len(errors) != 0 and errors[0].get('ERRORMESSAGE') ==
+                    'ERROR: This zone is already in your zone list.'):
             raise ZoneAlreadyExistsError(zone_id=zone_id, driver=self,
                     value='')
 
@@ -137,7 +138,7 @@ class ZonomiDNSDriver(DNSDriver):
         response, errors = self.connection.request(action=action, params=
                 params).parse_body()
         #ipdb.set_trace()
-        if len(errors) != 0 and errors[0].get('ERRORCODE') == '404':
+        if len(errors) != 0 and errors[0].get('ERRORMESSAGE') == 'Record not deleted.':
             raise RecordDoesNotExistError(record_id=record.id, driver=self,
                     value='')
 

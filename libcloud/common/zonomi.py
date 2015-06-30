@@ -15,7 +15,9 @@ __all__ = [
 API_HOST = 'zonomi.com'
 
 SPECIAL_ERRORS = [
-        'Not found.'
+        'Not found.',
+        'ERROR: This zone is already in your zone list.',
+        'Record not deleted.'
     ]
 
 class ZonomiException(Exception):
@@ -98,8 +100,8 @@ class ZonomiResponse(XmlResponse):
             data.append('DELETED')
 
         if result_counts is not None and result_counts.attrib.get('deleted') == '0':
-            error_dict['ERRORCODE'] = '404'
-            error_dict['ERRORMESSAGE'] = 'Not found.'
+            error_dict['ERRORCODE'] = self.status
+            error_dict['ERRORMESSAGE'] = 'Record not deleted.'
             errors.append(error_dict)
 
         return (data, errors)
