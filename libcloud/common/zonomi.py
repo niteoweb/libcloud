@@ -5,6 +5,7 @@ from libcloud.utils.py3 import b, PY3
 
 
 __all__ = [
+        'ZonomiException',
         'ZonomiResponse',
         'ZonomiConnection'
     ]
@@ -13,7 +14,26 @@ __all__ = [
 #Endpoint for Zonomi API.
 API_HOST = 'zonomi.com'
 
+SPECIAL_ERRORS = [
+        'Not found.'
+    ]
+
+class ZonomiException(Exception):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+        self.args = (code, message)
+
+    def __str__(self):
+        return "%s %s" % (self.code, self.message)
+
+    def __repr__(self):
+        return "ZonomiException %s %s" % (self.code, self.message)
+
+
 class ZonomiResponse(XmlResponse):
+    errors = None
+    objects = None
 
     def __init__(self, response, connection):
         self.connection = connection
@@ -32,7 +52,13 @@ class ZonomiResponse(XmlResponse):
         if PY3:
             self.body = b(self.body).decode('utf-8')
         #ipdb.set_trace()
+        self.objects, self.errors = self.parse_body()
+        if not self.success() and self.errors[0]['ERRORMESSAGE'] not in SPECIAL_ERRORS:
+            #ipdb.set_trace()
+            raise self._make_excp(self.errors[0])
+        #ipdb.set_trace()
     def parse_body(self):
+        error_dict = {}
         actions = None
         result_counts = None
         action_childrens = None
@@ -42,7 +68,9 @@ class ZonomiResponse(XmlResponse):
         #ipdb.set_trace()
         #Error handling
         if xml_body.text is not None and 'ERROR' in xml_body.text:
-            errors.append(xml_body.text)
+            error_dict['ERRORCODE'] = self.status
+            error_dict['ERRORMESSAGE'] = xml_body.text
+            errors.append(error_dict)
 
         #Data handling
         childrens = xml_body.getchildren()
@@ -65,16 +93,21 @@ class ZonomiResponse(XmlResponse):
             data.append('DELETED')
 
         if result_counts is not None and result_counts.attrib.get('deleted') == '0':
-            errors.append(result_counts.attrib)
-
+            error_dict['ERRORCODE'] = '404'
+            error_dict['ERRORMESSAGE'] = 'Not found.'
+            errors.append(error_dict)
 
         return (data, errors)
 
     def success(self):
-        pass
+        return (len(self.errors) == 0)
 
-    def _make_excp(self):
-        pass
+    def _make_excp(self, error):
+        """
+        :param error: contains error code and error message
+        :type error: dict
+        """
+        return ZonomiException(error['ERRORCODE'], error['ERRORMESSAGE'])
 
 
 class ZonomiConnection(ConnectionKey):
