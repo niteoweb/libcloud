@@ -110,7 +110,7 @@ class ZonomiDNSDriver(DNSDriver):
 
     def list_records(self, zone):
         action = '/app/dns/dyndns.jsp?'
-        params = {'action':'QUERY', 'name':zone.id}
+        params = {'action':'QUERY', 'name':'**.'+ zone.id}
         response, errors = self.connection.request(action=action, params=
                 params).parse_body()
 
@@ -126,7 +126,9 @@ class ZonomiDNSDriver(DNSDriver):
         pass
 
     def delete_record(self, record):
-        pass
+        """
+        Use
+        """
 
     def create_record(self, name, zone, type, data, extra):
         """
