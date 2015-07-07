@@ -60,9 +60,9 @@ class ZonomiDNSDriver(DNSDriver):
     def list_zones(self):
         action = '/app/dns/dyndns.jsp?'
         params = {'action':'QUERYZONES', 'api_key':self.key}
+
         response, errors = self.connection.request(action=action,
                 params=params).parse_body()
-
         zones = self._to_zones(response)
 
         return zones
@@ -124,7 +124,20 @@ class ZonomiDNSDriver(DNSDriver):
         return records
 
     def get_record(self, record_id, zone_id):
-        pass
+        record = None
+        zone = self.get_zone(zone_id=zone_id)
+        records = self.list_records(zone=zone)
+
+        for r in records:
+            if r.id == record_id:
+                record = r
+
+        if record is None:
+            raise RecordDoesNotExistError(record_id=record_id, driver=self,
+                    value='')
+
+        return record
+
 
     def delete_record(self, record):
         """

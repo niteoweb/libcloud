@@ -10,7 +10,6 @@ __all__ = [
         'ZonomiConnection'
     ]
 
-
 #Endpoint for Zonomi API.
 API_HOST = 'zonomi.com'
 
@@ -43,22 +42,21 @@ class ZonomiResponse(XmlResponse):
         self.error = response.reason
         self.status = response.status
 
-        #This attribute is used when usng LoggingConnection
+        #This attribute is used when using LoggingConnection
         original_data = getattr(response, '_original_data', None)
         if original_data:
             self.body = response._original_data
         else:
             self.body = self._decompress_response(body=response.read(),
                     headers=self.headers)
-        #ipdb.set_trace()
+
         if PY3:
             self.body = b(self.body).decode('utf-8')
         #ipdb.set_trace()
         self.objects, self.errors = self.parse_body()
         if not self.success() and self.errors[0]['ERRORMESSAGE'] not in SPECIAL_ERRORS:
-            #ipdb.set_trace()
             raise self._make_excp(self.errors[0])
-        #ipdb.set_trace()
+
     def parse_body(self):
         error_dict = {}
         actions = None
@@ -77,11 +75,9 @@ class ZonomiResponse(XmlResponse):
             else:
                 error_dict['ERRORMESSAGE'] = xml_body.text
             errors.append(error_dict)
-            #ipdb.set_trace()
 
         #Data handling
         childrens = xml_body.getchildren()
-        #ipdb.set_trace()
         if len(childrens) == 3:
             result_counts = childrens[1]
             actions = childrens[2]
