@@ -26,7 +26,28 @@ class ZonomiTests(unittest.TestCase):
         ZonomiMockHttp.type = 'LIST_ZONES_SUCCESS'
         zones = self.driver.list_zones()
 
-        self.assertEqual(len(zones), 4)
+        self.assertEqual(len(zones), 3)
+
+        zone = zones[0]
+        self.assertEqual(zone.id, 'thegamertest.com')
+        self.assertEqual(zone.domain, 'thegamertest.com')
+        self.assertEqual(zone.type, 'NATIVE')
+        self.assertEqual(zone.ttl, None)
+        self.assertEqual(zone.driver, self.driver)
+
+        second_zone = zones[1]
+        self.assertEqual(second_zone.id, 'lonelygamer.com')
+        self.assertEqual(second_zone.domain, 'lonelygamer.com')
+        self.assertEqual(second_zone.type, 'NATIVE')
+        self.assertEqual(second_zone.ttl, None)
+        self.assertEqual(second_zone.driver, self.driver)
+
+        third_zone = zones[2]
+        self.assertEqual(third_zone.id, 'gamertest.com')
+        self.assertEqual(third_zone.domain, 'gamertest.com')
+        self.assertEqual(third_zone.type, 'NATIVE')
+        self.assertEqual(third_zone.ttl, None)
+        self.assertEqual(third_zone.driver, self.driver)
 
 
 class ZonomiMockHttp(MockHttp):
