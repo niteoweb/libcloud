@@ -8,7 +8,7 @@ from libcloud.common.zonomi import ZonomiException
 from libcloud.dns.drivers.zonomi import ZonomiDNSDriver
 from libcloud.test.secrets import DNS_PARAMS_ZONOMI
 from libcloud.test.file_fixtures import DNSFileFixtures
-from libcloud.dns.types import ZoneDoesNotExistError
+from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
 from libcloud.dns.base import Zone
 
 
@@ -84,11 +84,31 @@ class ZonomiTests(unittest.TestCase):
         else:
             self.fail('Exception was not thrown.')
 
-    def test_delete_zone_DELETE_ZONE_SUCCESS(self):
+    def test_delete_zone_delete_zone_success(self):
         ZonomiMockHttp.type = 'DELETE_ZONE_SUCCESS'
         status = self.driver.delete_zone(zone=self.test_zone)
 
         self.assertEqual(status, True)
+
+    def test_create_zone_already_exists(self):
+        ZonomiMockHttp.type = 'CREATE_ZONE_ALREADY_EXISTS'
+        try:
+            self.driver.create_zone(zone_id='gamertest.com')
+        except ZoneAlreadyExistsError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.zone_id, 'gamertest.com')
+        else:
+            self.fail('Exception was not thrown.')
+
+    def test_create_zone_create_zone_success(self):
+        ZonomiMockHttp.type = 'CREATE_ZONE_SUCCESS'
+
+        zone = self.driver.create_zone(zone_id='myzone.com')
+
+        self.assertEqual(zone.id, 'myzone.com')
+        self.assertEqual(zone.domain, 'myzone.com')
+        self.assertEqual(zone.type, 'NATIVE')
+        self.assertEqual(zone.ttl, None)
 
 
 class ZonomiMockHttp(MockHttp):
@@ -118,6 +138,16 @@ class ZonomiMockHttp(MockHttp):
 
     def _app_dns_dyndns_jsp_DELETE_ZONE_SUCCESS(self, method, url, body, headers):
         body = self.fixtures.load('delete_zone.xml')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _app_dns_addzone_jsp_CREATE_ZONE_SUCCESS(self, method, url, body,
+            headers):
+        body = self.fixtures.load('create_zone.xml')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _app_dns_addzone_jsp_CREATE_ZONE_ALREADY_EXISTS(self, method, url,
+            body, headers):
+        body = self.fixtures.load('create_zone_already_exists.xml')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
