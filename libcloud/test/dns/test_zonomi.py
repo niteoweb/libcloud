@@ -9,7 +9,8 @@ from libcloud.dns.drivers.zonomi import ZonomiDNSDriver
 from libcloud.test.secrets import DNS_PARAMS_ZONOMI
 from libcloud.test.file_fixtures import DNSFileFixtures
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
-from libcloud.dns.base import Zone
+from libcloud.dns.types import RecordDoesNotExistError
+from libcloud.dns.base import Zone, Record
 
 
 
@@ -20,6 +21,9 @@ class ZonomiTests(unittest.TestCase):
         self.driver = ZonomiDNSDriver(*DNS_PARAMS_ZONOMI)
         self.test_zone = Zone(id='zone.com', domain='zone.com', driver=
                 self.driver, type='NATIVE', ttl=None, extra={})
+        self.test_record = Record(id='record.zone.com', name='record.zone.com',
+                data='127.0.0.1', type='A', zone=self.test_zone, driver=self,
+                                            extra={})
 
     def test_list_zones_empty(self):
         ZonomiMockHttp.type = 'EMPTY_ZONES_LIST'
@@ -127,6 +131,19 @@ class ZonomiTests(unittest.TestCase):
         self.assertEqual(record.name, 'zone.com')
         self.assertEqual(record.zone, self.test_zone)
 
+        second_record = records[1]
+        self.assertEqual(second_record.id, 'zone.com')
+        self.assertEqual(second_record.name, 'zone.com')
+        self.assertEqual(second_record.type, 'NS')
+        self.assertEqual(second_record.data, 'ns1.zonomi.com')
+        self.assertEqual(second_record.zone, self.test_zone)
+
+        third_record = records[2]
+        self.assertEqual(third_record.id, 'zone.com')
+        self.assertEqual(third_record.name, 'zone.com')
+        self.assertEqual(third_record.type, 'NS')
+        self.assertEqual(third_record.data, 'ns5.zonomi.com')
+        self.assertEqual(third_record.zone, self.test_zone)
 
     def test_get_record_does_not_exist(self):
         ZonomiMockHttp.type = 'GET_RECORD_DOES_NOT_EXIST'
@@ -137,12 +154,22 @@ class ZonomiTests(unittest.TestCase):
         pass
 
     def test_delete_record_does_not_exist(self):
-        ZonomiMockHttp.type = 'DELETE_ZONE_DOES_NOT_EXIST'
-        pass
+        ZonomiMockHttp.type = 'DELETE_RECORD_DOES_NOT_EXIST'
+        record = self.test_record
+        try:
+            self.driver.delete_record(record=record)
+        except RecordDoesNotExistError:
+            e = sys.exc_info()[1]
+            self.assertEqual(e.record_id, record.id)
+        else:
+            self.fail('Exception was not thrown.')
 
     def test_delete_record_success(self):
         ZonomiMockHttp.type = 'DELETE_RECORD_SUCCESS'
-        pass
+        record = self.test_record
+        status = self.driver.delete_record(record=record)
+
+        self.assertEqual(status, True)
 
     def test_create_record_already_exists(self):
         ZonomiMockHttp.type = 'CREATE_RECORD_ALREADY_EXISTS'
@@ -200,6 +227,16 @@ class ZonomiMockHttp(MockHttp):
     def _app_dns_dyndns_jsp_LIST_RECORDS_SUCCESS(self, method, url, body,
             headers):
         body = self.fixtures.load('list_records.xml')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _app_dns_dyndns_jsp_DELETE_RECORD_SUCCESS(self, method, url, body,
+            headers):
+        body = self.fixtures.load('delete_record.xml')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _app_dns_dyndns_jsp_DELETE_RECORD_DOES_NOT_EXIST(self, method, url,
+            body, headers):
+        body = self.fixtures.load('delete_record_does_not_exist.xml')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
