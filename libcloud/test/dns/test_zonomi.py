@@ -110,6 +110,48 @@ class ZonomiTests(unittest.TestCase):
         self.assertEqual(zone.type, 'NATIVE')
         self.assertEqual(zone.ttl, None)
 
+    def test_list_records_empty_list(self):
+        ZonomiMockHttp.type = 'LIST_RECORDS_EMPTY_LIST'
+        pass
+
+    def test_list_records_success(self):
+        ZonomiMockHttp.type = 'LIST_RECORDS_SUCCESS'
+        records = self.driver.list_records(zone=self.test_zone)
+
+        self.assertEqual(len(records), 3)
+
+        record = records[0]
+        self.assertEqual(record.id, 'zone.com')
+        self.assertEqual(record.type,  'SOA')
+        self.assertEqual(record.data,'ns1.zonomi.com. soacontact.zonomi.com. 13')
+        self.assertEqual(record.name, 'zone.com')
+        self.assertEqual(record.zone, self.test_zone)
+
+
+    def test_get_record_does_not_exist(self):
+        ZonomiMockHttp.type = 'GET_RECORD_DOES_NOT_EXIST'
+        pass
+
+    def test_get_record_success(self):
+        ZonomiMockHttp.type = 'GET_RECORD_SUCCESS'
+        pass
+
+    def test_delete_record_does_not_exist(self):
+        ZonomiMockHttp.type = 'DELETE_ZONE_DOES_NOT_EXIST'
+        pass
+
+    def test_delete_record_success(self):
+        ZonomiMockHttp.type = 'DELETE_RECORD_SUCCESS'
+        pass
+
+    def test_create_record_already_exists(self):
+        ZonomiMockHttp.type = 'CREATE_RECORD_ALREADY_EXISTS'
+        pass
+
+    def test_create_record_success(self):
+        ZonomiMockHttp.type = 'CREATE_RECORD_SUCCESS'
+        pass
+
 
 class ZonomiMockHttp(MockHttp):
     fixtures = DNSFileFixtures('zonomi')
@@ -148,6 +190,16 @@ class ZonomiMockHttp(MockHttp):
     def _app_dns_addzone_jsp_CREATE_ZONE_ALREADY_EXISTS(self, method, url,
             body, headers):
         body = self.fixtures.load('create_zone_already_exists.xml')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _app_dns_dyndns_jsp_LIST_RECORDS_EMPTY_LIST(self, method, url, body,
+            headers):
+        body = self.fixtures.load('list_records_empty_list.xml')
+        return (httplib.OK, body, {}, httplib.responses[httplib.OK])
+
+    def _app_dns_dyndns_jsp_LIST_RECORDS_SUCCESS(self, method, url, body,
+            headers):
+        body = self.fixtures.load('list_records.xml')
         return (httplib.OK, body, {}, httplib.responses[httplib.OK])
 
 if __name__ == '__main__':
