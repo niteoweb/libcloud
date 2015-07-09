@@ -68,3 +68,6 @@ class DurableConnection(ConnectionUserAndKey):
     def add_default_params(self, params):
         params['user_id'] = self.user_id
         params['key'] = self.key
+
+    def add_default_headers(self, headers):
+        pass
