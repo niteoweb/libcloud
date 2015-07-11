@@ -1,8 +1,15 @@
+import ipdb
 from libcloud.dns.types import Provider, RecordType
 from libcloud.dns.base import Record, Zone
 from libcloud.common.durabledns import DurableConnection, DurableResponse
 from libcloud.dns.base import DNSDriver
 
+
+__all__ = [
+        'DurableDNSResponse',
+        'DurableDNSConnection',
+        'DurableDNSDriver'
+    ]
 
 class DurableDNSResponse(DurableResponse):
     pass
@@ -22,7 +29,7 @@ class DurableDNSDriver(DNSDriver):
             RecordType.NS:'NS',
             RecordType.MX:'MX',
             RecordType.A:'A',
-            RecordType.AAA:'AAAA',
+            RecordType.AAAA:'AAAA',
             RecordType.CNAME:'CNAME',
             RecordType.TXT:'TXT',
             RecordType.SRV:'SRV'
@@ -57,7 +64,20 @@ class DurableDNSDriver(DNSDriver):
         return records
 
     def list_zones(self):
-        pass
+        data =  """
+        <soap:Body xmlns:m="https://durabledns.com/services/dns/listZones">
+            <urn:listZoneswsdl:listZones>
+                <urn:listZoneswsdl:apiuser>aEUg8CzbkVPv</urn:listZoneswsdl:apiuser>
+                <urn:listZoneswsdl:apikey>luQ7ojMa9bRwmt8y1i</urn:listZoneswsdl:apikey>
+            </urn:listZoneswsdl:listZones>
+        </soap:Body>
+            """
+        action = '/services/dns/listZones.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:listZoneswsdl#listZones"}
+        response = self.connection.request(action=action, params=params, data=
+                data, method="POST", headers=headers)
+        ipdb.set_trace()
 
     def get_zone(self, zone_id):
         pass

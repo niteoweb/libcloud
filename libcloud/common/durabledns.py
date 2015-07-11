@@ -69,5 +69,12 @@ class DurableConnection(ConnectionUserAndKey):
         params['user_id'] = self.user_id
         params['key'] = self.key
 
+        return params
+
     def add_default_headers(self, headers):
-        pass
+        headers['Content-Type'] = 'text/xml'
+        #headers['Accept'] = 'application/soap+xml, application/dime, \
+        #        multipart/related, text/*'
+        headers['Content-Encoding'] = 'gzip; charset=ISO-8859-1'
+
+        return headers
