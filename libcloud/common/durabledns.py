@@ -1,3 +1,6 @@
+import ipdb
+from bs4 import BeautifulSoup
+
 from libcloud.utils.py3 import PY3, b
 
 
@@ -45,14 +48,22 @@ class DurableResponse(XmlResponse):
                                                   headers=self.headers)
         if PY3:
             self.body = b(self.body).decode('utf-8')
+        #xml response from durabledns not properly formatted
+        #using BeautifulSoup.prettify(encoding='utf-8') to fix this issue
+        b_soup = BeautifulSoup(self.body, 'xml')
+        self.body = b_soup.prettify(encoding='utf-8')
+        self.parsed_body = self.parse_body()
 
     def parse_body(self):
         """
         Used to parse body from httplib.HttpResponse object.
         """
-        xml_body = super(DurableResponse, self).parse_body()
+        xml_obj = super(DurableResponse, self).parse_body()
+        #parse the xml_obj
+        #root = xml_obj.getroottree()
+        #origin = root.xpath('//origin/text()')
 
-        return xml_body
+        return xml_obj
 
     def success(self):
         """

@@ -67,11 +67,12 @@ class DurableDNSDriver(DNSDriver):
         data =  """
         <soap:Body xmlns:m="https://durabledns.com/services/dns/listZones">
             <urn:listZoneswsdl:listZones>
-                <urn:listZoneswsdl:apiuser>aEUg8CzbkVPv</urn:listZoneswsdl:apiuser>
-                <urn:listZoneswsdl:apikey>luQ7ojMa9bRwmt8y1i</urn:listZoneswsdl:apikey>
+                <urn:listZoneswsdl:apiuser>%s</urn:listZoneswsdl:apiuser>
+                <urn:listZoneswsdl:apikey>%s</urn:listZoneswsdl:apikey>
             </urn:listZoneswsdl:listZones>
         </soap:Body>
-            """
+            """  % (self.key, self.secret)
+
         action = '/services/dns/listZones.php?'
         params = {}
         headers = {"SOAPAction":"urn:listZoneswsdl#listZones"}
@@ -80,7 +81,22 @@ class DurableDNSDriver(DNSDriver):
         ipdb.set_trace()
 
     def get_zone(self, zone_id):
-        pass
+        data = """
+        <soap:Body xmlns:m="https://durabledns.com/services/dns/getZone">
+            <urn:getZonewsdl:getZone>
+                <urn:getZonewsdl:apiuser>%s</urn:getZonewsdl:apiuser>
+                <urn:getZonewsdl:apikey>%s</urn:getZonewsdl:apikey>
+                <urn:getZonewsdl:zonename>%s</urn:getZonewsdl:zonename>
+            </urn:getZonewsdl:getZone>
+        </soap:Body>
+               """ % (self.key, self.secret, zone_id)
+        #ipdb.set_trace()
+        action = '/services/dns/getZone.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:getZonewsdl#getZone"}
+        response = self.connection.request(action=action, params=params,data=
+                data, method="POST", headers=headers)
+        ipdb.set_trace()
 
     def delete_zone(self, zone):
         pass
