@@ -4,7 +4,8 @@ from libcloud.dns.types import Provider, RecordType
 from libcloud.dns.base import Record, Zone
 from libcloud.common.durabledns import DurableConnection, DurableResponse
 from libcloud.dns.base import DNSDriver
-from libcloud.dns.types import ZoneDoesNotExistError
+from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
+from libcloud.dns.base import Zone
 
 
 __all__ = [
@@ -135,7 +136,38 @@ class DurableDNSDriver(DNSDriver):
         return response.status in [httplib.OK]
 
     def create_zone(self, domain, type=None, ttl=None, extra=None):
-        pass
+        zone = None
+        data = """
+            <soap:Body xmlns:m="https://durabledns.com/dns/services/createZone">
+                <urn:createZonewsdl:createZone>
+                    <urn:createZonewsdl:apiuser>%s</urn:createZonewsdl:apiuser>
+                    <urn:createZonewsdl:apikey>%s</urn:createZonewsdl:apikey>
+                    <urn:createZonewsdl:zonename>%s</urn:createZonewsdl:zonename>
+                    <urn:createZonewsdl:ns>%s</urn:createZonewsdl:ns>
+                    <urn:createZonewsdl:mbox>%s</urn:createZonewsdl:mbox>
+                    <urn:createZonewsdl:refresh>%d</urn:createZonewsdl:refresh>
+                    <urn:createZonewsdl:retry>%d</urn:createZonewsdl:retry>
+                    <urn:createZonewsdl:expire>%d</urn:createZonewsdl:expire>
+                    <urn:createZonewsdl:minimum>%d</urn:createZonewsdl:minimum>
+                    <urn:createZonewsdl:ttl>%d</urn:createZonewsdl:ttl>
+                    <urn:createZonewsdl:xfer>%s</urn:createZonewsdl:xfer>
+                    <urn:createZonewsdl:update_acl>%s</urn:createZonewsdl:update_acl>
+                </urn:createZonewsdl:createZone>
+            </soap:Body>""" % (self.key, self.secret, domain, extra['ns'], extra['mbox'],
+                    extra['refresh'], extra['retry'], extra['expire'],extra['minimum'],
+                     ttl, extra['xfer'], extra['update_acl']
+                    )
+        action = '/services/dns/createZone.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:createZonewsdl#createZone"}
+        #make request to server
+        response = self.connection.request(action=action, params=params, data=data,
+                    method="POST", headers=headers)
+        if response.status == 200:
+            zone = Zone(id=domain, type=type, ttl=ttl, driver=self, domain=domain,
+                    extra=extra)
+
+        return zone
 
     def list_records(self, zone):
         pass
