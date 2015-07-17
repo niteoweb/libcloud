@@ -37,8 +37,8 @@ class DurableDNSDriver(DNSDriver):
 
     def _to_zone(self, item):
         extra = {}
-        zone = Zone(id=item[''], type=item[''], domain=item[''], ttl=item[''],
-                driver=self, extra=extra)
+        zone = Zone(id=item['id'], type=item['type'], domain=item['id'],
+                ttl=item['ttl'],driver=self, extra=extra)
 
         return zone
 
@@ -64,6 +64,7 @@ class DurableDNSDriver(DNSDriver):
         return records
 
     def list_zones(self):
+        zones = []
         data =  """
         <soap:Body xmlns:m="https://durabledns.com/services/dns/listZones">
             <urn:listZoneswsdl:listZones>
@@ -76,9 +77,11 @@ class DurableDNSDriver(DNSDriver):
         action = '/services/dns/listZones.php?'
         params = {}
         headers = {"SOAPAction":"urn:listZoneswsdl#listZones"}
-        response = self.connection.request(action=action, params=params, data=
-                data, method="POST", headers=headers)
-        ipdb.set_trace()
+        objects, errors = self.connection.request(action=action, params=params, data=
+                data, method="POST", headers=headers).parse_body()
+        zones.append(self._to_zones(objects))
+
+        return zones[0]
 
     def get_zone(self, zone_id):
         data = """

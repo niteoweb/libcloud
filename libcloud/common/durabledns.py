@@ -41,6 +41,7 @@ class DurableResponse(XmlResponse):
         #This attribute is set when using LoggingConnection
         original_data = getattr(response, '_original_data', None)
         #if original_data, no need to decompress the response body
+        #because the body is decompressed so it can be logged
         if original_data:
             self.body = response._original_data
         else:
@@ -52,9 +53,12 @@ class DurableResponse(XmlResponse):
         #using BeautifulSoup.prettify(encoding='utf-8') to fix this issue
         b_soup = BeautifulSoup(self.body, 'xml')
         self.body = b_soup.prettify(encoding='utf-8')
-        self.parsed_body = self.parse_body()
-
+        self.objects, errors  = self.parse_body()
+        #ipdb.set_trace()
     def parse_body(self):
+        objects = []
+        errors = []
+        zone_dict = {'type':None, 'ttl':None }
         """
         Used to parse body from httplib.HttpResponse object.
         """
@@ -62,8 +66,15 @@ class DurableResponse(XmlResponse):
         #parse the xml_obj
         #root = xml_obj.getroottree()
         #origin = root.xpath('//origin/text()')
-
-        return xml_obj
+        for response_element in xml_obj.iterfind('.//listZonesResponse'):
+            if response_element is not None:
+                for zone in response_element.iterfind('.//origin'):
+                    zone_dict['id'] = zone.text
+                    zone_dict['domain'] = zone.text
+                    objects.append(zone_dict)
+                    zone_dict = {'type':None, 'ttl':None}
+        #ipdb.set_trace()
+        return (objects, errors)
 
     def success(self):
         """
