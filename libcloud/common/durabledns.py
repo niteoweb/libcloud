@@ -82,6 +82,7 @@ class DurableResponse(XmlResponse):
                 zone_dict['domain'] = zone.text.strip()
                 zone_dict['id'] = zone.text.strip()
                 objects.append(zone_dict)
+                #reset the zone_dict for later usage
                 zone_dict = {'type':None, 'ttl':None}
         #parse response from getZoneResponse
         for getZoneResponse_el in xml_obj.iterfind('.//getZoneResponse'):
@@ -102,6 +103,9 @@ class DurableResponse(XmlResponse):
         Used to determine if the request was successful.
         """
         return len(self.errors) == 0
+
+    def _make_excp(self, error):
+        return DurableException(error['ERRORCODE', error['ERRORMESSAGE']])
 
 
 class DurableConnection(ConnectionUserAndKey):

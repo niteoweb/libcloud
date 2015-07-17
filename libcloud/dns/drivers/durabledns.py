@@ -1,4 +1,5 @@
 import ipdb
+from libcloud.utils.py3 import httplib
 from libcloud.dns.types import Provider, RecordType
 from libcloud.dns.base import Record, Zone
 from libcloud.common.durabledns import DurableConnection, DurableResponse
@@ -102,7 +103,7 @@ class DurableDNSDriver(DNSDriver):
                 data=data, method="POST", headers=headers).parse_body()
         #ipdb.set_trace()
         #check errors list
-        #if errors list not empty and Zone does not exist in it
+        #if errors list not empty and 'Zone does not exist' in it
         #raise ZoneDoesNotExistError
         if len(errors) != 0 and 'Zone does not exist' in errors[0]['ERRORMESSAGE']:
             raise ZoneDoesNotExistError(zone_id=zone_id, driver=self, value='')
@@ -112,7 +113,26 @@ class DurableDNSDriver(DNSDriver):
         return zones[0]
 
     def delete_zone(self, zone):
-        pass
+        data = """
+            <soap:Body xmlns:m="https://durabledns.com/dns/services/deleteZone">
+                <urn:deleteZonewsdl:deleteZone>
+                    <urn:deleteZonewsdl:apiuser>%s</urn:deleteZonewsdl:apiuser>
+                    <urn:deleteZonewsdl:apikey>%s</urn:deleteZonewsdl:apikey>
+                    <urn:deleteZonewsdl:zonename>%s</urn:deleteZonewsdl:zonename>
+                </urn:deleteZonewsdl:deleteZone>
+            </soap:Body>
+        """   % (self.key, self.secret, zone.id)
+        action = '/services/dns/deleteZone.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:deleteZonewsdl#deleteZone"}
+        response = self.connection.request(action=action, params=params, data=
+                data, method="POST", headers=headers)
+        ipdb.set_trace()
+        objects, errors = response.parse_body()
+        if len(errors) != 0 and 'Zone does not exist' in errors[0]['ERRORMESSAGE']:
+            raise ZoneDoesNotExistError(zone_id=zone.id, driver=self, value='')
+
+        return response.status in [httplib.OK]
 
     def create_zone(self, domain, type=None, ttl=None, extra=None):
         pass
