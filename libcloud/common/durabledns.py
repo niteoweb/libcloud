@@ -12,6 +12,10 @@ from libcloud.common.base import XmlResponse
 #API HOST to connect
 API_HOST = 'durabledns.com'
 
+SPECIAL_ERRORS = [
+        'Zone does not exist'
+        ]
+
 
 class DurableException(Exception):
 
@@ -53,11 +57,12 @@ class DurableResponse(XmlResponse):
         #using BeautifulSoup.prettify(encoding='utf-8') to fix this issue
         b_soup = BeautifulSoup(self.body, 'xml')
         self.body = b_soup.prettify(encoding='utf-8')
-        self.objects, errors  = self.parse_body()
+        self.objects, self.errors  = self.parse_body()
         #ipdb.set_trace()
     def parse_body(self):
         objects = []
         errors = []
+        error_dict = {}
         zone_dict = {'type':None, 'ttl':None }
         """
         Used to parse body from httplib.HttpResponse object.
@@ -65,6 +70,12 @@ class DurableResponse(XmlResponse):
         xml_obj = super(DurableResponse, self).parse_body()
         #ipdb.set_trace()
         #parse the xml_obj
+        #handle errors
+        for error_el in xml_obj.iterfind('.//faultstring'):
+            error_dict['ERRORMESSAGE'] = error_el.text.strip()
+            error_dict['ERRORCODE'] = self.status
+            errors.append(error_dict)
+
         #parsing response from listZonesResponse
         for response_element in xml_obj.iterfind('.//listZonesResponse'):
             for zone in response_element.iterfind('.//origin'):

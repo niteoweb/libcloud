@@ -3,6 +3,7 @@ from libcloud.dns.types import Provider, RecordType
 from libcloud.dns.base import Record, Zone
 from libcloud.common.durabledns import DurableConnection, DurableResponse
 from libcloud.dns.base import DNSDriver
+from libcloud.dns.types import ZoneDoesNotExistError
 
 
 __all__ = [
@@ -99,6 +100,13 @@ class DurableDNSDriver(DNSDriver):
         headers = {"SOAPAction":"urn:getZonewsdl#getZone"}
         objects, errors = self.connection.request(action=action, params=params,
                 data=data, method="POST", headers=headers).parse_body()
+        #ipdb.set_trace()
+        #check errors list
+        #if errors list not empty and Zone does not exist in it
+        #raise ZoneDoesNotExistError
+        if len(errors) != 0 and 'Zone does not exist' in errors[0]['ERRORMESSAGE']:
+            raise ZoneDoesNotExistError(zone_id=zone_id, driver=self, value='')
+
         zones = self._to_zones(objects)
 
         return zones[0]
