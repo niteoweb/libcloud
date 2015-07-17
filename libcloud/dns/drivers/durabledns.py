@@ -77,8 +77,8 @@ class DurableDNSDriver(DNSDriver):
         action = '/services/dns/listZones.php?'
         params = {}
         headers = {"SOAPAction":"urn:listZoneswsdl#listZones"}
-        objects, errors = self.connection.request(action=action, params=params, data=
-                data, method="POST", headers=headers).parse_body()
+        objects, errors = self.connection.request(action=action, params=params,
+                data=data, method="POST", headers=headers).parse_body()
         zones.append(self._to_zones(objects))
 
         return zones[0]
@@ -97,9 +97,11 @@ class DurableDNSDriver(DNSDriver):
         action = '/services/dns/getZone.php?'
         params = {}
         headers = {"SOAPAction":"urn:getZonewsdl#getZone"}
-        response = self.connection.request(action=action, params=params,data=
-                data, method="POST", headers=headers)
-        ipdb.set_trace()
+        objects, errors = self.connection.request(action=action, params=params,
+                data=data, method="POST", headers=headers).parse_body()
+        zones = self._to_zones(objects)
+
+        return zones[0]
 
     def delete_zone(self, zone):
         pass

@@ -63,17 +63,27 @@ class DurableResponse(XmlResponse):
         Used to parse body from httplib.HttpResponse object.
         """
         xml_obj = super(DurableResponse, self).parse_body()
-        #parse the xml_obj
-        #root = xml_obj.getroottree()
-        #origin = root.xpath('//origin/text()')
-        for response_element in xml_obj.iterfind('.//listZonesResponse'):
-            if response_element is not None:
-                for zone in response_element.iterfind('.//origin'):
-                    zone_dict['domain'] = zone.text.strip()
-                    zone_dict['id'] = zone.text.strip()
-                    objects.append(zone_dict)
-                    zone_dict = {'type':None, 'ttl':None}
         #ipdb.set_trace()
+        #parse the xml_obj
+        #parsing response from listZonesResponse
+        for response_element in xml_obj.iterfind('.//listZonesResponse'):
+            for zone in response_element.iterfind('.//origin'):
+                zone_dict['domain'] = zone.text.strip()
+                zone_dict['id'] = zone.text.strip()
+                objects.append(zone_dict)
+                zone_dict = {'type':None, 'ttl':None}
+        #parse response from getZoneResponse
+        for getZoneResponse_el in xml_obj.iterfind('.//getZoneResponse'):
+            for child in getZoneResponse_el.getchildren():
+                if child.tag == 'ttl':
+                    zone_dict['ttl'] = child.text.strip()
+                elif child.tag == 'origin':
+                    zone_dict['id'] = child.text.strip()
+                    zone_dict['domain'] = child.text.strip()
+            objects.append(zone_dict)
+            #reset the zone_dict for later usage
+            zone_dict = {'type':None, 'ttl':None}
+
         return (objects, errors)
 
     def success(self):
