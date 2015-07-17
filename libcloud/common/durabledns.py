@@ -69,8 +69,8 @@ class DurableResponse(XmlResponse):
         for response_element in xml_obj.iterfind('.//listZonesResponse'):
             if response_element is not None:
                 for zone in response_element.iterfind('.//origin'):
-                    zone_dict['id'] = zone.text.replace('\n', '').strip()
-                    zone_dict['domain'] = zone.text.replace('\n', '').strip()
+                    zone_dict['domain'] = zone.text.strip()
+                    zone_dict['id'] = zone.text.strip()
                     objects.append(zone_dict)
                     zone_dict = {'type':None, 'ttl':None}
         #ipdb.set_trace()
