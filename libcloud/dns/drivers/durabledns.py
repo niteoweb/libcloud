@@ -178,7 +178,7 @@ class DurableDNSDriver(DNSDriver):
         response = self.connection.request(action=action, params=params, data=data,
                     method="POST", headers=headers)
         objects, errors = response.parse_body()
-        ipdb.set_trace()
+        #ipdb.set_trace()
         #check for error Zone already exists in errors
         #if present, raise ZoneAlreadyExistsError
         if len(errors) != 0 and 'Zone Already Exist'in errors[0]['ERRORMESSAGE']:
@@ -191,7 +191,7 @@ class DurableDNSDriver(DNSDriver):
 
     def list_records(self, zone):
         data = """
-            <soap:Body xmlns:m:https://durabledns.com/services/dns/listRecords>
+            <soap:Body xmlns:m="https://durabledns.com/dns/services/listRecords">
                 <urn:listRecordswsdl:listRecords>
                     <urn:listRecordswsdl:apiuser>%s</urn:listRecordswsdl:apiuser>
                     <urn:listRecordswsdl:apikey>%s</urn:listRecordswsdl:apikey>
