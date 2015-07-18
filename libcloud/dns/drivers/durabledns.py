@@ -136,6 +136,20 @@ class DurableDNSDriver(DNSDriver):
         return response.status in [httplib.OK]
 
     def create_zone(self, domain, type=None, ttl=None, extra=None):
+        """
+        Use this method to create a `Zone` object.
+        Pass domain param, leave type as None, pass ttl param and extra param.
+        Keep in mind the followings when passing params.
+        domain should end in a dot. For example:myexample.com.
+        The following is an example request with create_zone.
+        domain = 'myexample.com.'
+        type = None
+        ttl = 1300
+        extra = {'mbox':'example.myexample.com', 'ns':'ns1.durabledns.com',
+        'minimum':1300, 'refresh':1300, 'expire':1300, 'update_acl':'127.0.0.1',
+         'xfer':'127.0.0.1'}
+        self.create_zone(domain=domain, type=type, ttl=ttl, extra=extra)
+        """
         zone = None
         data = """
             <soap:Body xmlns:m="https://durabledns.com/dns/services/createZone">
