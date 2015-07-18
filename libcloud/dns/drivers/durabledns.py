@@ -163,6 +163,12 @@ class DurableDNSDriver(DNSDriver):
         #make request to server
         response = self.connection.request(action=action, params=params, data=data,
                     method="POST", headers=headers)
+        objects, errors = response.parse_body()
+        ipdb.set_trace()
+        #check for error Zone already exists in errors
+        #if present, raise ZoneAlreadyExistsError
+        if len(errors) != 0 and 'Zone Already Exist'in errors[0]['ERRORMESSAGE']:
+            raise ZoneAlreadyExistsError(zone_id=domain, driver=self, value='')
         if response.status == 200:
             zone = Zone(id=domain, type=type, ttl=ttl, driver=self, domain=domain,
                     extra=extra)
