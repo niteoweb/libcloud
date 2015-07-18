@@ -190,7 +190,21 @@ class DurableDNSDriver(DNSDriver):
         return zone
 
     def list_records(self, zone):
-        pass
+        data = """
+            <soap:Body xmlns:m:https://durabledns.com/services/dns/listRecords>
+                <urn:listRecordswsdl:listRecords>
+                    <urn:listRecordswsdl:apiuser>%s</urn:listRecordswsdl:apiuser>
+                    <urn:listRecordswsdl:apikey>%s</urn:listRecordswsdl:apikey>
+                    <urn:listRecordswsdl:zonename>%s</urn:listRecordswsdl:zonename>
+                </urn:listRecordswsdl:listRecords>
+            </soap:Body>
+        """ % (self.key, self.secret, zone.id)
+        action = '/services/dns/listRecords.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:listRecordswsdl#listRecords"}
+        response = self.connection.request(action=action, params=params, data=
+                data, method="POST", headers=headers)
+        ipdb.set_trace()
 
     def get_record(self, zone_id, record_id):
         pass
