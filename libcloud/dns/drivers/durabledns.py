@@ -251,6 +251,10 @@ class DurableDNSDriver(DNSDriver):
                     <urn:createRecordwsdl:ttl>%d</urn:createRecordwsdl:ttl>
                     <urn:createRecordwsdl:ddns_enabled>%s</urn:createRecordwsdl:ddns_enabled>
                 </urn:createRecordwsdl:createRecord>
-
             </soap:Body>
             """
+        action = '/services/dns/createRecord.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:createRecordwsdl#createRecord"}
+        objects, errors = self.connection.request(action=action, data=data,
+                params=params, method="POST", headers=headers)
