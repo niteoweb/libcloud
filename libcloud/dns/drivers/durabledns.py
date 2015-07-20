@@ -54,8 +54,8 @@ class DurableDNSDriver(DNSDriver):
 
     def _to_record(self, item, zone=None):
         extra = {}
-        record = Record(id=item[''], type=item[''], zone=zone, name=item[''],
-                data=item[''], driver=self, extra=extra)
+        record = Record(id=item['id'], type=item['type'], zone=zone, name=item['name'],
+                data=item['data'], driver=self, extra=extra)
 
         return record
 
@@ -202,9 +202,12 @@ class DurableDNSDriver(DNSDriver):
         action = '/services/dns/listRecords.php?'
         params = {}
         headers = {"SOAPAction":"urn:listRecordswsdl#listRecords"}
-        response = self.connection.request(action=action, params=params, data=
-                data, method="POST", headers=headers)
+        objects, errors = self.connection.request(action=action, params=params, data=
+                data, method="POST", headers=headers).parse_body()
         ipdb.set_trace()
+        records = self._to_records(objects, zone)
+
+        return records
 
     def get_record(self, zone_id, record_id):
         pass
