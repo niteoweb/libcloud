@@ -239,4 +239,18 @@ class DurableDNSDriver(DNSDriver):
         return response.status in [httplib.OK]
 
     def create_record(self, name, zone, type, data, extra=None):
-        pass
+        data = """
+            <soap:Body xlmns:m="https://durabledns.com/dns/services/createRecord">
+                <urn:createRecordwsdl:createRecord>
+                    <urn:createRecordwsdl:apiuser>%s</urn:createRecordwsdl:apiuser>
+                    <urn:createRecordwsdl:apikey>%s</urn:createRecordwsdl:apikey>
+                    <urn:createRecordwsdl:zonename>%s</urn:createRecordwsdl:zonename>
+                    <urn:createRecordwsdl:name>%s</urn:createRecordwsdl:name>
+                    <urn:createRecordwsdl:type>%s</urn:createRecordwsdl:type>
+                    <urn:createRecordwsdl:data>%s</urn:createRecordwsdl:data>
+                    <urn:createRecordwsdl:ttl>%d</urn:createRecordwsdl:ttl>
+                    <urn:createRecordwsdl:ddns_enabled>%s</urn:createRecordwsdl:ddns_enabled>
+                </urn:createRecordwsdl:createRecord>
+
+            </soap:Body>
+            """
