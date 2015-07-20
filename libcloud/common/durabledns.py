@@ -58,12 +58,13 @@ class DurableResponse(XmlResponse):
         b_soup = BeautifulSoup(self.body, 'xml')
         self.body = b_soup.prettify(encoding='utf-8')
         self.objects, self.errors  = self.parse_body()
-        #ipdb.set_trace()
+        ipdb.set_trace()
     def parse_body(self):
         objects = []
         errors = []
         error_dict = {}
         zone_dict = {'type':None, 'ttl':None }
+        record_dict = {}
         """
         Used to parse body from httplib.HttpResponse object.
         """
@@ -84,6 +85,7 @@ class DurableResponse(XmlResponse):
                 objects.append(zone_dict)
                 #reset the zone_dict for later usage
                 zone_dict = {'type':None, 'ttl':None}
+        #ipdb.set_trace()
         #parse response from getZoneResponse
         for getZoneResponse_el in xml_obj.iterfind('.//getZoneResponse'):
             for child in getZoneResponse_el.getchildren():
@@ -95,6 +97,21 @@ class DurableResponse(XmlResponse):
             objects.append(zone_dict)
             #reset the zone_dict for later usage
             zone_dict = {'type':None, 'ttl':None}
+        #parse response from listRecordsResponse
+        for item in xml_obj.iterfind('.//listRecordsResponse'):
+            for item in xml_obj.iterfind('.//item'):
+                for child in item.getchildren():
+                    if child.tag == 'id':
+                        record_dict['id'] = child.text.strip()
+                    elif child.tag == 'name':
+                        record_dict['name'] = child.text.strip()
+                    elif child.tag == 'type':
+                        record_dict['type'] = child.text.strip()
+                    elif child.tag == 'data':
+                        record_dict['data'] = child.text.strip()
+                objects.append(record_dict)
+            #reset the record_dict for later usage
+            record_dict = {}
 
         return (objects, errors)
 
