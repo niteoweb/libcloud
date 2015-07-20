@@ -204,7 +204,7 @@ class DurableDNSDriver(DNSDriver):
         headers = {"SOAPAction":"urn:listRecordswsdl#listRecords"}
         objects, errors = self.connection.request(action=action, params=params, data=
                 data, method="POST", headers=headers).parse_body()
-        ipdb.set_trace()
+        #ipdb.set_trace()
         records = self._to_records(objects, zone)
 
         return records
@@ -213,7 +213,23 @@ class DurableDNSDriver(DNSDriver):
         pass
 
     def delete_record(self, record):
-        pass
+        data = """
+        <soap:Body xlmns:m="https://durabledns.com/dns/services/deleteRecord">
+            <urn:deleteRecordwsdl:deleteRecord>
+                <urn:deleteRecordwsdl:apiuser>%s</urn:deleteRecordwsdl:apiuser>
+                <urn:deleteRecordwsdl:apikey>%s</urn:deleteRecordwsdl:apikey>
+                <urn:deleteRecordwsdl:zonename>%s</urn:deleteRecordwsdl:zonename>
+                <urn:deleteRecordwsdl:id>%s</urn:deleteRecordwsdl:zonename>
+            </urn:deleteRecordwsdl:deleteRecord>
+        </soap:Body>
+        """ % (self.key, self.secret, record.zone.id, record.id)
+        action = '/services/dns/deleteRecord.php?'
+        params = {}
+        headers = {"SOAPAction":"urn:deleteRecordwsdl#deleteRecord"}
+        response = self.connection.request(action=action, data=data, headers=
+                headers, params=params, method="POST")
+
+        return response.status in [httplib.OK]
 
     def create_record(self, name, zone, type, data, extra=None):
         pass
