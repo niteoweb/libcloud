@@ -252,9 +252,11 @@ class DurableDNSDriver(DNSDriver):
                     <urn:createRecordwsdl:ddns_enabled>%s</urn:createRecordwsdl:ddns_enabled>
                 </urn:createRecordwsdl:createRecord>
             </soap:Body>
-            """
+            """         % (self.key, self.secret, zone.id, type, data, extra['ttl'],
+                                        extra['ddns_enabled'])
         action = '/services/dns/createRecord.php?'
         params = {}
         headers = {"SOAPAction":"urn:createRecordwsdl#createRecord"}
         objects, errors = self.connection.request(action=action, data=data,
                 params=params, method="POST", headers=headers)
+
