@@ -112,6 +112,12 @@ class DurableResponse(XmlResponse):
                 objects.append(record_dict)
             #reset the record_dict for later usage
             record_dict = {}
+        #catch Record does not exists error
+        for deleteRecordResponse_el in xml_obj.iterfind('.//deleteRecordResponse'):
+            for return_el in deleteRecordResponse_el.iterfind('.//return'):
+                if 'Record does not exists' in return_el.text.strip():
+                    errors.append({'ERRORMESSAGE':return_el.text.strip(),
+                        'ERRROCODE':self.status})
 
         return (objects, errors)
 

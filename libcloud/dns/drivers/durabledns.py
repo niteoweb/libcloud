@@ -5,6 +5,7 @@ from libcloud.dns.base import Record, Zone
 from libcloud.common.durabledns import DurableConnection, DurableResponse
 from libcloud.dns.base import DNSDriver
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
+from libcloud.dns.types import RecordDoesNotExistError
 from libcloud.dns.base import Zone
 
 
@@ -219,7 +220,7 @@ class DurableDNSDriver(DNSDriver):
                 <urn:deleteRecordwsdl:apiuser>%s</urn:deleteRecordwsdl:apiuser>
                 <urn:deleteRecordwsdl:apikey>%s</urn:deleteRecordwsdl:apikey>
                 <urn:deleteRecordwsdl:zonename>%s</urn:deleteRecordwsdl:zonename>
-                <urn:deleteRecordwsdl:id>%s</urn:deleteRecordwsdl:zonename>
+                <urn:deleteRecordwsdl:id>%s</urn:deleteRecordwsdl:id>
             </urn:deleteRecordwsdl:deleteRecord>
         </soap:Body>
         """ % (self.key, self.secret, record.zone.id, record.id)
@@ -228,6 +229,12 @@ class DurableDNSDriver(DNSDriver):
         headers = {"SOAPAction":"urn:deleteRecordwsdl#deleteRecord"}
         response = self.connection.request(action=action, data=data, headers=
                 headers, params=params, method="POST")
+        #ipdb.set_trace()
+        objects, errors = response.parse_body()
+        #ipdb.set_trace()
+        if len(errors) != 0 and 'Record does not exists' in errors[0]['ERRORMESSAGE']:
+            raise RecordDoesNotExistError(record_id=record.id, driver=self,
+                    value='')
 
         return response.status in [httplib.OK]
 
