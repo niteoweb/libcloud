@@ -259,7 +259,7 @@ class DurableDNSDriver(DNSDriver):
         params = {}
         headers = {"SOAPAction":"urn:createRecordwsdl#createRecord"}
         objects, errors = self.connection.request(action=action, data=data,
-                params=params, method="POST", headers=headers)
+                params=params, method="POST", headers=headers).parse_body()
         record_item = objects[0]
         record_item['name'] = name
         record_item['type'] = type

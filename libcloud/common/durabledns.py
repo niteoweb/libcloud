@@ -57,7 +57,6 @@ class DurableResponse(XmlResponse):
         #using BeautifulSoup.prettify(encoding='utf-8') to fix this issue
         b_soup = BeautifulSoup(self.body, 'xml')
         self.body = b_soup.prettify(encoding='utf-8')
-        ipdb.set_trace()
         self.objects, self.errors  = self.parse_body()
 
     def parse_body(self):
