@@ -248,15 +248,21 @@ class DurableDNSDriver(DNSDriver):
                     <urn:createRecordwsdl:name>%s</urn:createRecordwsdl:name>
                     <urn:createRecordwsdl:type>%s</urn:createRecordwsdl:type>
                     <urn:createRecordwsdl:data>%s</urn:createRecordwsdl:data>
+                    <urn:createRecordwsdl:aux>%d</urn:createRecordwsdl:aux>
                     <urn:createRecordwsdl:ttl>%d</urn:createRecordwsdl:ttl>
                     <urn:createRecordwsdl:ddns_enabled>%s</urn:createRecordwsdl:ddns_enabled>
                 </urn:createRecordwsdl:createRecord>
             </soap:Body>
-            """         % (self.key, self.secret, zone.id, type, data, extra['ttl'],
-                                        extra['ddns_enabled'])
+            """         % (self.key, self.secret, zone.id, name, type, data,
+                           extra['aux'] ,extra['ttl'], extra['ddns_enabled'])
         action = '/services/dns/createRecord.php?'
         params = {}
         headers = {"SOAPAction":"urn:createRecordwsdl#createRecord"}
         objects, errors = self.connection.request(action=action, data=data,
                 params=params, method="POST", headers=headers)
+        record_item = objects[0]
+        record_item['name'] = name
+        record_item['type'] = type
+        record_item['data'] = data
 
+        return self._to_record(record_item, zone)

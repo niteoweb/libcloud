@@ -57,6 +57,7 @@ class DurableResponse(XmlResponse):
         #using BeautifulSoup.prettify(encoding='utf-8') to fix this issue
         b_soup = BeautifulSoup(self.body, 'xml')
         self.body = b_soup.prettify(encoding='utf-8')
+        ipdb.set_trace()
         self.objects, self.errors  = self.parse_body()
 
     def parse_body(self):
@@ -118,6 +119,12 @@ class DurableResponse(XmlResponse):
                 if 'Record does not exists' in return_el.text.strip():
                     errors.append({'ERRORMESSAGE':return_el.text.strip(),
                         'ERRROCODE':self.status})
+        #parse response in createRecordResponse
+        for createRecordResponse_el in xml_obj.iterfind('.//createRecordResponse'):
+            for return_el in createRecordResponse_el.iterfind('.//return'):
+                record_dict['id'] = return_el.text.strip()
+                objects.append(record_dict)
+                record_dict = {}
 
         return (objects, errors)
 
