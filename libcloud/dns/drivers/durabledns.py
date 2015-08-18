@@ -6,7 +6,7 @@ from libcloud.common.durabledns import DurableConnection, DurableResponse
 from libcloud.dns.base import DNSDriver
 from libcloud.dns.types import ZoneDoesNotExistError, ZoneAlreadyExistsError
 from libcloud.dns.types import RecordDoesNotExistError
-from libcloud.dns.base import Zone
+
 
 
 __all__ = [
@@ -239,7 +239,7 @@ class DurableDNSDriver(DNSDriver):
         return response.status in [httplib.OK]
 
     def create_record(self, name, zone, type, data, extra=None):
-        data = """
+        soap_request = """
             <soap:Body xlmns:m="https://durabledns.com/dns/services/createRecord">
                 <urn:createRecordwsdl:createRecord>
                     <urn:createRecordwsdl:apiuser>%s</urn:createRecordwsdl:apiuser>
@@ -258,7 +258,7 @@ class DurableDNSDriver(DNSDriver):
         action = '/services/dns/createRecord.php?'
         params = {}
         headers = {"SOAPAction":"urn:createRecordwsdl#createRecord"}
-        objects, errors = self.connection.request(action=action, data=data,
+        objects, errors = self.connection.request(action=action, data=soap_request,
                 params=params, method="POST", headers=headers).parse_body()
         record_item = objects[0]
         record_item['name'] = name
