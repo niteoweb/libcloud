@@ -49,6 +49,7 @@ class Provider(object):
     DURABLEDNS = 'durabledns'
     LEASEWEB = 'leaseweb'
     CLOUDNS = 'cloudns'
+    NSONE = 'nsone'
 
     # Deprecated
     RACKSPACE_US = 'rackspace_us'

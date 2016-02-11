@@ -14,6 +14,7 @@ class NsOneConnection(ConnectionKey):
     responseCls = NsOneResponse
 
     def add_default_headers(self, headers):
+        headers['Content-Type'] = 'application/json'
         headers['X-NSONE-KEY'] = self.key
 
         return headers

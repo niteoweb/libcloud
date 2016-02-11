@@ -1,5 +1,13 @@
+import httplib
+
 from libcloud.dns.base import DNSDriver, Zone
 from libcloud.common.nsone import NsOneConnection, NsOneResponse
+from libcloud.dns.types import Provider, ZoneDoesNotExistError
+
+
+__all__ = [
+    'NsOneDNSDriver'
+]
 
 
 class NsOneDNSResponse(NsOneResponse):
@@ -13,6 +21,7 @@ class NsOneDNSConnection(NsOneConnection):
 class NsOneDNSDriver(DNSDriver):
     name = 'NS1 DNS'
     website = 'https://ns1.com'
+    type = Provider.NSONE
     connectionCls = NsOneDNSConnection
 
     def list_zones(self):
@@ -23,13 +32,21 @@ class NsOneDNSDriver(DNSDriver):
         return zones
 
     def get_zone(self, zone_id):
+        action = '/v1/zones/%s' % zone.domain
         pass
 
     def create_zone(self, domain, type='master', ttl=None, extra=None):
         pass
 
     def delete_zone(self, zone):
-        pass
+        action = '/v1/zones/%s' % zone.domain
+        zones_list = self.list_zones()
+        if not self.ex_zone_exists(zone_id=zone.id, zones_list=zones_list):
+            raise ZoneDoesNotExistError(value='', driver=self, zone_id=zone.id)
+
+        response = self.connection.request(action=action, method='DELETE')
+
+        return response.status == httplib.OK
 
     def update_zone(self, zone, domain, type='master', ttl=None, extra=None):
         pass
@@ -49,8 +66,25 @@ class NsOneDNSDriver(DNSDriver):
     def update_record(self, record, name, type, data, extra=None):
         pass
 
+    def ex_zone_exists(self, zone_id, zones_list):
+        """
+        Function to check if a `Zone` object exists.
+        :param zone_id: ID of the `Zone` object.
+        :type zone_id: ``str``
+
+        :param zones_list: A list containing `Zone` objects.
+        :type zones_list: ``list``.
+
+        :rtype: Returns `True` or `False`.
+        """
+        zone_ids = []
+        for zone in zones_list:
+            zone_ids.append(zone.id)
+
+        return zone_id in zone_ids
+
     def _to_zone(self, item):
-        common_attr = ['name', 'id', 'type']
+        common_attr = ['zone', 'id', 'type']
         extra = {}
         for key in item:
             if key not in common_attr:
